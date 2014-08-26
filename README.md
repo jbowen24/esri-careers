@@ -8,6 +8,8 @@ This repository is the map of participants and events. It is an open & collabora
 ![gis_day_events_around_the_world___gis_day_-_november_14__2012](https://cloud.githubusercontent.com/assets/1218/3986323/121da8c0-289a-11e4-9e65-e8c49113da88.png)
 _oh dear..._
 
+![View Test App](https://ArcGIS.github.io/gis-day/index.html)
+
 ## Contributing
 
 Anyone can contribute to this project. Depending on your time and expertise you can contribute in a few ways:
