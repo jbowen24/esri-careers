@@ -6,4 +6,8 @@ If you want to modify the code or HTML/CSS, you should submit a "Pull Request" (
 
 To submit a Pull Request, first you should [click the "Fork"](https://github.com/ArcGIS/gis-day/fork) button to make your own copy. You can then clone the repository (copy) to your computer and modify. You then push it to your copy on GitHub and finally submit a "Pull Request". 
 
+It is easiest to submit a pull-request from your `gh-pages` branch so that we can verify the functionality by visiting `http://username.github.io/gis-day`. 
+
+Also, if you are responding to an existing issue, please include "Resolves #issue" where `#issue` is the issue number. This will cross-link to the issue as well as close the issue when your Pull Request is accepted.  
+
 For more details, see [Esri Contributing Guidelines](https://github.com/esri/contributing) or [GitHub's notes on Forking](https://help.github.com/articles/fork-a-repo) to see this in detail.
