@@ -46,7 +46,7 @@
         map = new Map("mapDiv", {
             basemap: "gray",
             center: [-28, 40],
-            zoom: 3
+            zoom: 2
         });
 
         // Set popup
@@ -80,7 +80,8 @@
             removeFeatureService();
             var infoTemplate,
                 url;
-            infoTemplate = new InfoTemplate("Feature Data", "${*}");
+            //infoTemplate = new InfoTemplate("Feature Data", "${*}");
+            infoTemplate = new InfoTemplate("${Name}", "<p>Type: ${Type}</p><p>Date: ${Date}</p>");
             url = dom.byId("inputUrl").value.trim();
             featureLayer = new FeatureLayer(url, {
                 mode: FeatureLayer.MODE_ONDEMAND,
@@ -117,7 +118,7 @@
                     layerUpdated = featureLayer.on("update-end", function (result) {
                         // Zoom to all of the features   
                         extent = graphicsUtils.graphicsExtent(result.target.graphics);
-                        map.setExtent(extent);
+                        map.setExtent(extent.expand(1.2));
                         // Only do this once
                         layerUpdated.remove();
                         dom.byId("inputUrl").value = result.target.url;
@@ -154,8 +155,8 @@
         <p>Paste in the point feature service url:</p>
         <div class="form-group">
             <textarea id="inputUrl" class="form-control" rows="3" 
-              placeholder="http://services3.arcgis.com/7LJujXVDAGlq47mO/arcgis/rest/services/Portland_Coffee_Shops/FeatureServer/0"  
-              value="http://services3.arcgis.com/7LJujXVDAGlq47mO/arcgis/rest/services/Portland_Coffee_Shops/FeatureServer/0">http://services3.arcgis.com/7LJujXVDAGlq47mO/arcgis/rest/services/Portland_Coffee_Shops/FeatureServer/0
+              placeholder="http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/Esri_Dev_Events/FeatureServer/0"  
+              value="http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/Esri_Dev_Events/FeatureServer/0">http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/Esri_Dev_Events/FeatureServer/0
             </textarea>
              <!-- http://services.arcgis.com/oKgs2tbjK6zwTdvi/arcgis/rest/services/Major_World_Cities/FeatureServer/0 -->
         </div>
