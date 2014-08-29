@@ -1,130 +1,177 @@
 <!DOCTYPE html> 
 <html>  
 <head> 
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
-  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
-  <title>GIS Day Starter App</title>  
-  <link rel="shortcut icon" href="//esri.github.io/quickstart-map-js/images/favicon.ico">
-  <!-- ArcGIS API for JavaScript CSS-->
-  <link rel="stylesheet" href="//js.arcgis.com/3.10/js/esri/css/esri.css">
-  <!-- Web Framework CSS - Bootstrap (getbootstrap.com) and Bootstrap-map-js (github.com/esri/bootstrap-map-js) -->
-  <!-- NOTE: We can remove core bootstrap if we want later but we need bootstrapmap.css for the nice popups etc...-->
-  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="//esri.github.io/bootstrap-map-js/src/css/bootstrapmap.css">
-  <style>
-    html, body, #mapDiv {
-      height: 100%;
-      width: 100%;
-    }
-  </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>GIS Day Demo App</title>  
+    <link rel="shortcut icon" href="//esri.github.io/quickstart-map-js/images/favicon.ico">
+    <!-- ArcGIS API for JavaScript CSS-->
+    <link rel="stylesheet" href="//js.arcgis.com/3.10/js/esri/css/esri.css">
+    <!-- Web Framework CSS - Bootstrap (getbootstrap.com) and Bootstrap-map-js (github.com/esri/bootstrap-map-js) -->
+    <!-- NOTE: We can remove core bootstrap if we want later but we need bootstrapmap.css for the nice popups etc...-->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//esri.github.io/bootstrap-map-js/src/css/bootstrapmap.css">
+    
+    <style>
+        html, body, #mapDiv {
+          height: 100%;
+          width: 100%;
+        }
+        #search {
+            display: block;
+            position: absolute;
+            z-index: 2;
+            top: 15px;
+            left: 62px;
+        }
+    </style>
+<!-- 
+    <script type="text/javascript">
+        var dojoConfig = {
+            paths: {
+              src: location.pathname.replace(/\/[^/]+$/, '')
+            }
+        };
+    </script> -->
 
-  <!-- ArcGIS API for JavaScript library references -->
-  <script src="//js.arcgis.com/3.10compact"></script>
-  <script>
+    <!-- ArcGIS API for JavaScript library references -->
+    <script src="//js.arcgis.com/3.10compact"></script>
+    <script>
     require(["esri/map",
+        "esri/dijit/Geocoder",
         "esri/renderers/SimpleRenderer",
         "esri/symbols/PictureMarkerSymbol",
         "esri/layers/FeatureLayer",
         "esri/InfoTemplate",
         "esri/graphicsUtils",
+        "./src/clusterfeaturelayer.js",
+        "esri/symbols/SimpleMarkerSymbol",
+        "esri/symbols/SimpleLineSymbol",
+        "esri/symbols/SimpleFillSymbol",
+        "esri/symbols/PictureMarkerSymbol",
+        "esri/renderers/ClassBreaksRenderer",
+        "dojo/_base/Color",
         "dojo/keys",
         "dojo/on",
         "dojo/dom",
         "dojo/domReady!"],
-      function (Map, SimpleRenderer, PictureMarkerSymbol, FeatureLayer, InfoTemplate, graphicsUtils, keys, on, dom) {
-        "use strict";
+      function (Map, Geocoder, SimpleRenderer, PictureMarkerSymbol, FeatureLayer, InfoTemplate, graphicsUtils, ClusterFeatureLayer, SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, PictureMarkerSymbol, ClassBreaksRenderer, Color, keys, on, dom) {
         
         // Locals
         var map,
             popup,
-            featureLayer,
-            markerSymbol,
-            simpleRenderer;
+            clusterLayer,
+            geocoder;
 
         // Create map
         map = new Map("mapDiv", {
             basemap: "gray",
-            center: [-28, 40],
-            zoom: 2
+            center: [-25, 40],
+            zoom: 3
         });
+
+        // Create widget
+        geocoder = new Geocoder({
+            value: "Redlands, CA",
+            autoNavigate: true,
+            maxLocations: 25,
+            autoComplete: true,
+            arcgisGeocoder: {
+            outFields: "Place_addr, PlaceName, Score"
+            },
+            map: map
+            },"search");        
+        geocoder.startup();
 
         // Set popup
         popup = map.infoWindow;
-        popup.highlight = false;
+        // popup.highlight = false;
         popup.titleInBody = false;
-
 
         // Wire map events
         map.on("load", function () {
-            // Marker symbol
-            markerSymbol = new createPictureSymbol("//esri.github.io/quickstart-map-js/images/blue-pin.png", 0, 12, 13, 24);
-            // Renderer
-            simpleRenderer = new SimpleRenderer(markerSymbol);
             // Add layer
             addFeatureService();
         });
-        map.on("layer-add-result", layerAdded);
+        //map.on("layer-add-result", layerAdded);
 
-        // Wire UI events
-        on(dom.byId("btnAdd"), "click", addFeatureService);
-        on(dom.byId("btnRemove"), "click", removeFeatureService);
-        on(dom.byId("inputUrl"), "keydown", function (event) {
-            if (event.keyCode === keys.ENTER) {
-                addFeatureService();
+        // close the info window when the map is clicked
+        map.on('click', cleanUp);
+        
+        // close the info window when esc is pressed
+        map.on('key-down', function(e) {
+            if (e.keyCode === 27) {
+                cleanUp();
             }
         });
 
+        // clear singles when infoWindow is hidden
+        map.infoWindow.on("hide", function () {
+            clusterLayer.clearSingles();
+        });
+
+        function cleanUp() {
+            map.infoWindow.hide();
+            clusterLayer.clearSingles();
+        }
+
         // Create a feature layer to get feature service
         function addFeatureService() {
-            removeFeatureService();
             var infoTemplate,
-                url;
-            //infoTemplate = new InfoTemplate("Feature Data", "${*}");
-            infoTemplate = new InfoTemplate("${Name}", "<p>Type: ${Type}</p><p>Date: ${Date}</p>");
-            url = dom.byId("inputUrl").value.trim();
-            featureLayer = new FeatureLayer(url, {
-                mode: FeatureLayer.MODE_ONDEMAND,
-                outFields: ["*"],
-                infoTemplate: infoTemplate
+                picBaseUrl,
+                defaultSym,
+                renderer,
+                sls,
+                sms,
+                small,
+                medium,
+                large;
+
+            infoTemplate = new InfoTemplate("GeoNet Data", "${*}");
+
+            // Add cluster renderer
+            clusterLayer = new ClusterFeatureLayer({
+                "url": "https://services.arcgis.com/qlsm3WyDqmjmnVuG/ArcGIS/rest/services/GeoNet_Production/FeatureServer/0",
+                "distance": 100,
+                "id": "clusters",
+                "labelColor": "#fff",
+                "resolution": map.extent.getWidth() / map.width,
+                //"singleColor": "#888",
+                //"singleTemplate": popupTemplate,
+                "singleTemplate": infoTemplate,
+                "useDefaultSymbol": false,
+                "zoomOnClick": false
             });
-            featureLayer.setRenderer(simpleRenderer);
-            map.addLayer(featureLayer);
-        }
+            // Esri old pin - ugly
+            //picBaseUrl = "http://static.arcgis.com/images/Symbols/Shapes/";
+            //defaultSym = new PictureMarkerSymbol(picBaseUrl + "BluePin1LargeB.png", 22, 22).setOffset(0, 10);
+            
+            // Esri new marker
+            defaultSym = new createPictureSymbol("//esri.github.io/quickstart-map-js/images/blue-pin.png", 0, 8, 8, 15);
 
-        // Remove existing service
-        function removeFeatureService() {
-            if (featureLayer) {
-                map.removeLayer(featureLayer);
-                map.infoWindow.hide();
-            }
-        }
+            renderer = new ClassBreaksRenderer(defaultSym, "clusterCount");
+            sls = SimpleLineSymbol;
+            sms = SimpleMarkerSymbol;
 
-        // Listen for enter key
-        function addService_onKeyPress(e) {
-            if (e.keyCode === keys.ENTER) {
-                addFeatureService();
-            }
-        }
+            small = new sms("circle", 20,
+                        new sls(sls.STYLE_SOLID, new Color([255,191,0,0.25]), 15),
+                        new Color([255,191,0,0.5]));
 
-        // Zoom to layer and update url
-        function layerAdded(layer) {
-            var layerUpdated,
-                extent;
-            if (layer.error) {
-                console.error("Feature service could not be loaded. Check URL. " + layer.error);
-            } else {
-                if (featureLayer) {
-                    layerUpdated = featureLayer.on("update-end", function (result) {
-                        // Zoom to all of the features   
-                        extent = graphicsUtils.graphicsExtent(result.target.graphics);
-                        map.setExtent(extent.expand(1.2));
-                        // Only do this once
-                        layerUpdated.remove();
-                        dom.byId("inputUrl").value = result.target.url;
-                    });
-                }
-            }
+            medium = new sms("circle", 30,
+                                      new sls(sls.STYLE_SOLID, new Color([148,0,211,0.25]), 15),
+                                      new Color([148,0,211,0.5]));
+            large = new sms("circle", 50,
+                        new sls(sls.STYLE_SOLID, new Color([255,0,0,0.25]), 15),
+                        new Color([255,0,0,0.5]));
+
+            renderer.addBreak(2, 10, small);
+            renderer.addBreak(10, 25, medium);
+            renderer.addBreak(25, 5000, large);
+
+            // Providing a ClassBreakRenderer is also optional
+            clusterLayer.setRenderer(renderer);
+            map.addLayer(clusterLayer);
         }
 
         // Create png marker
@@ -147,23 +194,7 @@
 </script>
 </head>
 <body>
-   <div class="panel panel-primary panel-fixed">
-    <div class="panel-heading">
-      <h3 class="panel-title">GIS Day Starter App</h3>
-    </div>
-    <div class="panel-body">
-        <p>Paste in the point feature service url:</p>
-        <div class="form-group">
-            <textarea id="inputUrl" class="form-control" rows="3" 
-              placeholder="http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/Esri_Dev_Events/FeatureServer/0"  
-              value="http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/Esri_Dev_Events/FeatureServer/0">http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/Esri_Dev_Events/FeatureServer/0
-            </textarea>
-             <!-- http://services.arcgis.com/oKgs2tbjK6zwTdvi/arcgis/rest/services/Major_World_Cities/FeatureServer/0 -->
-        </div>
-        <button id="btnAdd" class="btn btn-success">Add</button>
-        <button id="btnRemove" class="btn btn-default">Remove</button>
-    </div>
-  </div>
-  <div id="mapDiv"></div>
+    <div id="mapDiv"></div>
+    <div id="search"></div>
 </body>
 </html>
