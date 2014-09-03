@@ -128,7 +128,7 @@
                 medium,
                 large;
 
-            infoTemplate = new InfoTemplate("GIS Day Event", "${*}");
+            infoTemplate = new InfoTemplate("${xx}", "<b>${EventName}</b><br>${Descriptio}<br>${EventType} ${PrimaryAud}<br><br><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
 
             // Add cluster renderer
             clusterLayer = new ClusterFeatureLayer({
