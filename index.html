@@ -25,6 +25,20 @@
             top: 15px;
             left: 62px;
         }
+
+        .esriPopup .title {
+            color: #777;
+        }
+
+        .popup-event {
+            font-weight: bold;
+        }
+
+        .esriPopup .titlePane, .esriPopup .contentPane, .esriPopup .actionsPane {
+            color: #777;
+        }
+
+
     </style>
 <!-- 
     <script type="text/javascript">
@@ -62,7 +76,8 @@
         var map,
             popup,
             clusterLayer,
-            geocoder;
+            geocoder,
+            extent;
 
         // Create map
         map = new Map("mapDiv", {
@@ -81,23 +96,32 @@
             outFields: "Place_addr, PlaceName, Score"
             },
             map: map
-            },"search");        
+            }, "search");
         geocoder.startup();
 
         // Set popup
         popup = map.infoWindow;
         // popup.highlight = false;
         popup.titleInBody = false;
+        popup.domNode.style.marginTop = "-13px";
 
         // Wire map events
         map.on("load", function () {
             // Add layer
             addFeatureService();
+            extent = map.extent;
         });
         //map.on("layer-add-result", layerAdded);
 
         // close the info window when the map is clicked
         map.on('click', cleanUp);
+
+        map.on('extent-change', function (e) {
+            if (e.extent.getWidth() > extent.getWidth()) {
+                map.infoWindow.hide();
+            }
+            extent = e.extent;
+        });
         
         // close the info window when esc is pressed
         map.on('key-down', function(e) {
@@ -128,12 +152,16 @@
                 medium,
                 large;
 
-            infoTemplate = new InfoTemplate("${xx}", "<b>${EventName}</b><br>${Descriptio}<br>${EventType} ${PrimaryAud}<br><br><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
+            // For show popup on clusters
+            // infoTemplate = new InfoTemplate("${xx}", "<b>${EventName}</b><br>${Descriptio}<br>${EventType} ${PrimaryAud}<br><br><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
+
+            // For zoomOnClick on clusters
+            infoTemplate = new InfoTemplate("Community Event", "<div class='popup-event'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}<br><br><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
 
             // Add cluster renderer
             clusterLayer = new ClusterFeatureLayer({
                 "url": "https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0",
-                "distance": 50,
+                "distance": 60,
                 "id": "clusters",
                 "labelColor": "#fff",
                 "resolution": map.extent.getWidth() / map.width,
@@ -141,7 +169,7 @@
                 //"singleTemplate": popupTemplate,
                 "singleTemplate": infoTemplate,
                 "useDefaultSymbol": false,
-                "zoomOnClick": false,
+                "zoomOnClick": true,
                 "objectIdField": "FID",
                 outFields: ["Name", "Organizati", "department", "Alocation", "AAdress", "City", "State", "Province", "Country", "PostCode", "Telephone", "Email", "Url", "EventType", "Descriptio", "PrimaryAud", "EventName"]
             });
@@ -156,9 +184,9 @@
             sls = SimpleLineSymbol;
             sms = SimpleMarkerSymbol;
 
-            small = new sms("circle", 20,
-                        new sls(sls.STYLE_SOLID, new Color([255,191,0,0.25]), 15),
-                        new Color([255,191,0,0.5]));
+            small = new sms("circle", 25,
+                        new sls(sls.STYLE_SOLID, new Color([50,190,0,0.25]), 15),
+                        new Color([50,190,0,0.5]));
 
             medium = new sms("circle", 50,
                                       new sls(sls.STYLE_SOLID, new Color([148,0,211,0.25]), 15),
@@ -167,9 +195,9 @@
                         new sls(sls.STYLE_SOLID, new Color([255,0,0,0.25]), 15),
                         new Color([255,0,0,0.5]));
 
-            renderer.addBreak(2, 10, small);
-            renderer.addBreak(10, 25, medium);
-            renderer.addBreak(25, 5000, large);
+            renderer.addBreak(2, 5, small);
+            renderer.addBreak(5, 20, medium);
+            renderer.addBreak(20, 5000, large);
 
             // Providing a ClassBreakRenderer is also optional
             clusterLayer.setRenderer(renderer);

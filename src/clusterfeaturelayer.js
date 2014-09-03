@@ -359,8 +359,6 @@ define([
             if (e.graphic) {
              attr = e.graphic.attributes;
              // show/hide
-             // this._setCurrentClusterGraphic(e.graphic);
-             // this._setCurrentLabel(e.graphic);
              this._setCurrentClusterGraphics(e.graphic);
             }
             if (attr && attr.clusterCount) {
@@ -424,6 +422,7 @@ define([
                 // this._onFeaturesReturned({ // kinda hacky here
                 //     features: []
                 // });
+                this._clusterGraphics();
             } else {
                 this.clear();
             }
