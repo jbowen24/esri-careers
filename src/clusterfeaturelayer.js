@@ -259,17 +259,33 @@ define([
             }
         },
 
-        _setCurrentClusterGraphic: function (c) {
-            this._currentClusterGraphic = c;
+        _setCurrentClusterGraphics: function (g) {
+            // Cluster was clicked
+            if (g.symbol === null) {
+                this._currentClusterLabel = this._getCurrentLabelGraphic(g);
+                this._currentClusterGraphic = g;
+            // Text symbol was clicked
+            } else {
+                //g.symbol.declaredClass === 'esri.symbol.TextSymbol') {
+                this._currentClusterLabel = g;
+                this._currentClusterGraphic = this._getCurrentClusterGraphic(g);
+            }
         },
 
-        _setCurrentLabel: function (c) {
-            var gArray = arrayUtils.filter(this.graphics, function(g) {
-                return (g.symbol &&
-                    g.symbol.declaredClass == 'esri.symbol.TextSymbol' &&
-                    g.attributes.clusterId == c.attributes.clusterId);
+        _getCurrentClusterGraphic: function (c) {
+            var gArray = arrayUtils.filter(this.graphics, function (g) {
+                return (g.attributes.clusterId === c.attributes.clusterId);
             });
-            this._currentClusterLabel = gArray[0];
+            return gArray[0];
+        },
+
+        _getCurrentLabelGraphic: function (c) {
+            var gArray = arrayUtils.filter(this.graphics, function (g) {
+                return (g.symbol &&
+                    g.symbol.declaredClass === 'esri.symbol.TextSymbol' &&
+                    g.attributes.clusterId === c.attributes.clusterId);
+            });
+            return gArray[0];
         },
 
         // override esri/layers/GraphicsLayer methods
@@ -339,8 +355,9 @@ define([
             if (e.graphic) {
              attr = e.graphic.attributes;
              // show/hide
-             this._setCurrentClusterGraphic(e.graphic);
-             this._setCurrentLabel(e.graphic);
+             // this._setCurrentClusterGraphic(e.graphic);
+             // this._setCurrentLabel(e.graphic);
+             this._setCurrentClusterGraphics(e.graphic);
             }
             if (attr && attr.clusterCount) {
                 var source = arrayUtils.filter(this._clusterData, function(g) {
