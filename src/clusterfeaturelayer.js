@@ -365,9 +365,9 @@ define([
                     );
                 }
             } else if (this._objectIdCache.length) {
-                this._onFeaturesReturned({ // kinda hacky here
-                    features: []
-                });
+                // this._onFeaturesReturned({ // kinda hacky here
+                //     features: []
+                // });
             } else {
                 this.clear();
             }
