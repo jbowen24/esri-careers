@@ -300,8 +300,10 @@ define([
             // listen to extent-change so data is re-clustered when zoom level changes
             this._extentChange = on(map, 'extent-change', lang.hitch(this, '_reCluster'));
             // listen for popup hide/show
-            map.infoWindow.on('hide', lang.hitch(this, '_popupVisibilityChange'));
-            map.infoWindow.on('show', lang.hitch(this, '_popupVisibilityChange'));
+            if (this._zoomOnClick) {
+                map.infoWindow.on('hide', lang.hitch(this, '_popupVisibilityChange'));
+                map.infoWindow.on('show', lang.hitch(this, '_popupVisibilityChange'));
+            }
 
             var layerAdded = on(map, 'layer-add', lang.hitch(this, function(e) {
                 if (e.layer === this) {

@@ -185,19 +185,22 @@
             sms = SimpleMarkerSymbol;
 
             small = new sms("circle", 25,
-                        new sls(sls.STYLE_SOLID, new Color([50,190,0,0.25]), 15),
-                        new Color([50,190,0,0.5]));
-
+                        new sls(sls.STYLE_SOLID, new Color([140,177,210,0.5]), 15),
+                        new Color([140,177,210,0.75]));
             medium = new sms("circle", 50,
-                                      new sls(sls.STYLE_SOLID, new Color([148,0,211,0.25]), 15),
-                                      new Color([148,0,211,0.5]));
+                        new sls(sls.STYLE_SOLID, new Color([64,128,153,0.5]), 15),
+                        new Color([64,128,153,0.75]));
             large = new sms("circle", 80,
-                        new sls(sls.STYLE_SOLID, new Color([255,0,0,0.25]), 15),
-                        new Color([255,0,0,0.5]));
+                        new sls(sls.STYLE_SOLID, new Color([20,72,77,0.5]), 15),
+                        new Color([20,72,77,0.75]));
+            xlarge = new sms("circle", 110,
+                        new sls(sls.STYLE_SOLID, new Color([20,72,77,0.5]), 15),
+                        new Color([20,72,77,0.75]));
 
             renderer.addBreak(2, 5, small);
             renderer.addBreak(5, 20, medium);
-            renderer.addBreak(20, 5000, large);
+            renderer.addBreak(20, 100, large);
+            renderer.addBreak(100, 5000, xlarge);
 
             // Providing a ClassBreakRenderer is also optional
             clusterLayer.setRenderer(renderer);
