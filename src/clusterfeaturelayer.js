@@ -241,20 +241,24 @@ define([
             }
         },
 
-        _reCluster: function() {
+        _reCluster: function () {
             // update resolution
             this._clusterResolution = this._map.extent.getWidth() / this._map.width;
             this._getObjectIds(this._map.extent);
         },
 
-        _popupVisibilityChange: function (e) {
-            if (this._currentClusterGraphic) {
-                if (this._map.infoWindow.isShowing) {
-                    this._currentClusterGraphic.hide();  
-                    this._currentClusterLabel.hide();                  
-                } else {
+        _popupVisibilityChange: function () {
+            this._showCurrentGraphics(!this._map.infoWindow.isShowing);
+        },
+
+        _showCurrentGraphics: function (show) {
+            if (this._currentClusterGraphic && this._currentClusterLabel) {
+                if (show) {
                     this._currentClusterGraphic.show();
-                    this._currentClusterLabel.show();                    
+                    this._currentClusterLabel.show();
+                } else {
+                    this._currentClusterGraphic.hide();
+                    this._currentClusterLabel.hide();
                 }
             }
         },
