@@ -67,7 +67,7 @@
         // Create map
         map = new Map("mapDiv", {
             basemap: "gray",
-            center: [-25, 40],
+            center: [-43, 40],
             zoom: 3
         });
 
@@ -128,12 +128,12 @@
                 medium,
                 large;
 
-            infoTemplate = new InfoTemplate("GeoNet Data", "${*}");
+            infoTemplate = new InfoTemplate("GIS Day Event", "${*}");
 
             // Add cluster renderer
             clusterLayer = new ClusterFeatureLayer({
-                "url": "https://services.arcgis.com/qlsm3WyDqmjmnVuG/ArcGIS/rest/services/GeoNet_Production/FeatureServer/0",
-                "distance": 100,
+                "url": "https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0",
+                "distance": 50,
                 "id": "clusters",
                 "labelColor": "#fff",
                 "resolution": map.extent.getWidth() / map.width,
@@ -141,7 +141,9 @@
                 //"singleTemplate": popupTemplate,
                 "singleTemplate": infoTemplate,
                 "useDefaultSymbol": false,
-                "zoomOnClick": false
+                "zoomOnClick": false,
+                "objectIdField": "FID",
+                outFields: ["Name", "Organizati", "department", "Alocation", "AAdress", "City", "State", "Province", "Country", "PostCode", "Telephone", "Email", "Url", "EventType", "Descriptio", "PrimaryAud", "EventName"]
             });
             // Esri old pin - ugly
             //picBaseUrl = "http://static.arcgis.com/images/Symbols/Shapes/";
@@ -158,10 +160,10 @@
                         new sls(sls.STYLE_SOLID, new Color([255,191,0,0.25]), 15),
                         new Color([255,191,0,0.5]));
 
-            medium = new sms("circle", 30,
+            medium = new sms("circle", 50,
                                       new sls(sls.STYLE_SOLID, new Color([148,0,211,0.25]), 15),
                                       new Color([148,0,211,0.5]));
-            large = new sms("circle", 50,
+            large = new sms("circle", 80,
                         new sls(sls.STYLE_SOLID, new Color([255,0,0,0.25]), 15),
                         new Color([255,0,0,0.5]));
 

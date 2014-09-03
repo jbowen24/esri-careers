@@ -183,6 +183,10 @@ define([
             this._objectIdCache = [];
             this._objectIdHash = {};
 
+            // track current cluster and label
+            this._currentClusterGraphic = null;
+            this._currentClusterLabel = null;
+
             this.detailsLoaded = false;
 
             this._query = new Query();
@@ -243,6 +247,47 @@ define([
             this._getObjectIds(this._map.extent);
         },
 
+        _popupVisibilityChange: function (e) {
+            if (this._currentClusterGraphic) {
+                if (this._map.infoWindow.isShowing) {
+                    this._currentClusterGraphic.hide();  
+                    this._currentClusterLabel.hide();                  
+                } else {
+                    this._currentClusterGraphic.show();
+                    this._currentClusterLabel.show();                    
+                }
+            }
+        },
+
+        _setCurrentClusterGraphics: function (g) {
+            // Cluster was clicked
+            if (g.symbol === null) {
+                this._currentClusterLabel = this._getCurrentLabelGraphic(g);
+                this._currentClusterGraphic = g;
+            // Text symbol was clicked
+            } else {
+                //g.symbol.declaredClass === 'esri.symbol.TextSymbol') {
+                this._currentClusterLabel = g;
+                this._currentClusterGraphic = this._getCurrentClusterGraphic(g);
+            }
+        },
+
+        _getCurrentClusterGraphic: function (c) {
+            var gArray = arrayUtils.filter(this.graphics, function (g) {
+                return (g.attributes.clusterId === c.attributes.clusterId);
+            });
+            return gArray[0];
+        },
+
+        _getCurrentLabelGraphic: function (c) {
+            var gArray = arrayUtils.filter(this.graphics, function (g) {
+                return (g.symbol &&
+                    g.symbol.declaredClass === 'esri.symbol.TextSymbol' &&
+                    g.attributes.clusterId === c.attributes.clusterId);
+            });
+            return gArray[0];
+        },
+
         // override esri/layers/GraphicsLayer methods
         _setMap: function(map, surface) {
             this._query.outSpatialReference = map.spatialReference;
@@ -250,6 +295,9 @@ define([
             this._query.outFields = this._outFields;
             // listen to extent-change so data is re-clustered when zoom level changes
             this._extentChange = on(map, 'extent-change', lang.hitch(this, '_reCluster'));
+            // listen for popup hide/show
+            map.infoWindow.on('hide', lang.hitch(this, '_popupVisibilityChange'));
+            map.infoWindow.on('show', lang.hitch(this, '_popupVisibilityChange'));
 
             var layerAdded = on(map, 'layer-add', lang.hitch(this, function(e) {
                 if (e.layer === this) {
@@ -306,6 +354,10 @@ define([
             var attr;
             if (e.graphic) {
              attr = e.graphic.attributes;
+             // show/hide
+             // this._setCurrentClusterGraphic(e.graphic);
+             // this._setCurrentLabel(e.graphic);
+             this._setCurrentClusterGraphics(e.graphic);
             }
             if (attr && attr.clusterCount) {
                 var source = arrayUtils.filter(this._clusterData, function(g) {
@@ -365,9 +417,9 @@ define([
                     );
                 }
             } else if (this._objectIdCache.length) {
-                this._onFeaturesReturned({ // kinda hacky here
-                    features: []
-                });
+                // this._onFeaturesReturned({ // kinda hacky here
+                //     features: []
+                // });
             } else {
                 this.clear();
             }
@@ -459,7 +511,7 @@ define([
                 }
             }
 
-            if ( ! clustered ) {
+            if (!clustered) {
                 this._clusterCreate(p);
                 p.attributes.clusterCount = 1;
                 this._showCluster(p);
