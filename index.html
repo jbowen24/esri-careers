@@ -9,9 +9,8 @@
     <!-- ArcGIS API for JavaScript CSS-->
     <link rel="stylesheet" href="//js.arcgis.com/3.10/js/esri/css/esri.css">
     <!-- Web Framework CSS - Bootstrap (getbootstrap.com) and Bootstrap-map-js (github.com/esri/bootstrap-map-js) -->
-    <!-- NOTE: We can remove core bootstrap if we want later but we need bootstrapmap.css for the nice popups etc...-->
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="//esri.github.io/bootstrap-map-js/src/css/bootstrapmap.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./vendor/bootstrap-map-js/css/bootstrapmap.css">
     
     <style>
         html, body, #mapDiv {
@@ -26,18 +25,77 @@
             left: 62px;
         }
 
+        .esriPopup {
+            font-family: Avenir;
+        }
+
         .esriPopup .title {
-            color: #777;
+            color: #3a78c0;
+            font-size: 14px;
         }
 
-        .popup-event {
+        .esriPopup .esriPopupWrapper, .esriPopup .titlePane, .esriPopup .contentPane, .esriPopup .actionsPane {
+            background-color: #f5f5f5;
+        }
+
+        .esriPopup .titlePane {
+            padding: 8px 14px 0px;
+        }
+
+        .esriPopup .contentPane  {
+            font-size: 12px;
+            color: #989898;
+            max-height: none;
+            border-top: none;
+        }
+
+        .popup-content-background {
+            margin: 0 -14px;
+            padding: 2px 14px 8px 14px;
+            background-color: #fff;
+        }
+
+        .popup-event-name {
+            color: #4d4d4d;
+            font-size: 15px;
             font-weight: bold;
+            padding: 4px 0;
         }
 
-        .esriPopup .titlePane, .esriPopup .contentPane, .esriPopup .actionsPane {
-            color: #777;
+        .popup-event-header {
+            color: #4d4d4d;
         }
 
+        .header-space {
+            margin: 8px 0 10px;
+        }
+
+        .header-nospace {
+            margin: 0;
+        }
+
+        /* Required Bootstrapmap.css changes */
+        .esriPopup .outerPointer.left {
+            background-position: 0px 0;
+            left: 6px;
+            width: 10px;
+            height: 15px;
+        }
+
+        .esriPopup .outerPointer.right {
+            background-position: -19px 0;
+            right: 6px;
+            height: 15px;
+            width: 10px;
+        }
+
+        .esriPopup .pointer.top {
+            margin-left: -11px;
+        }
+
+        .esriPopup .titleButton.prev {
+            right: 45px;
+        }
 
     </style>
 <!-- 
@@ -76,8 +134,7 @@
         var map,
             popup,
             clusterLayer,
-            geocoder,
-            extent;
+            geocoder;
 
         // Create map
         map = new Map("mapDiv", {
@@ -101,7 +158,7 @@
 
         // Set popup
         popup = map.infoWindow;
-        // popup.highlight = false;
+        popup.highlight = false;
         popup.titleInBody = false;
         popup.domNode.style.marginTop = "-13px";
 
@@ -109,7 +166,6 @@
         map.on("load", function () {
             // Add layer
             addFeatureService();
-            extent = map.extent;
         });
         //map.on("layer-add-result", layerAdded);
 
@@ -117,10 +173,9 @@
         map.on('click', cleanUp);
 
         map.on('extent-change', function (e) {
-            if (e.extent.getWidth() > extent.getWidth()) {
-                map.infoWindow.hide();
+            if (map.infoWindow.isShowing) {
+               map.infoWindow.reposition();
             }
-            extent = e.extent;
         });
         
         // close the info window when esc is pressed
@@ -150,18 +205,18 @@
                 sms,
                 small,
                 medium,
-                large;
+                large,
+                xlarge;
 
-            // For show popup on clusters
-            // infoTemplate = new InfoTemplate("${xx}", "<b>${EventName}</b><br>${Descriptio}<br>${EventType} ${PrimaryAud}<br><br><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
+            // For zoomOnClick on clusters - all fields
+            // infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-event'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}<hr><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
 
-            // For zoomOnClick on clusters
-            infoTemplate = new InfoTemplate("Community Event", "<div class='popup-event'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}<br><br><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
+            infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-content-background'><div class='popup-event-name'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}</div><p class='popup-event-header header-space'>HOST: <a target='_blank' href='${Url}'>${Organizati}</a></p><p class='popup-event-header header-nospace'>CONTACT: <a target='_top' href='mailto:${Email}?subject=GIS Day Event'>${Name}</a></p>");
 
             // Add cluster renderer
             clusterLayer = new ClusterFeatureLayer({
                 "url": "https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0",
-                "distance": 60,
+                "distance": 55,
                 "id": "clusters",
                 "labelColor": "#fff",
                 "resolution": map.extent.getWidth() / map.width,
@@ -173,30 +228,29 @@
                 "objectIdField": "FID",
                 outFields: ["Name", "Organizati", "department", "Alocation", "AAdress", "City", "State", "Province", "Country", "PostCode", "Telephone", "Email", "Url", "EventType", "Descriptio", "PrimaryAud", "EventName"]
             });
-            // Esri old pin - ugly
-            //picBaseUrl = "http://static.arcgis.com/images/Symbols/Shapes/";
-            //defaultSym = new PictureMarkerSymbol(picBaseUrl + "BluePin1LargeB.png", 22, 22).setOffset(0, 10);
-            
-            // Esri new marker
+
+            // Esri marker for single locations
             defaultSym = new createPictureSymbol("//esri.github.io/quickstart-map-js/images/blue-pin.png", 0, 8, 8, 15);
 
             renderer = new ClassBreaksRenderer(defaultSym, "clusterCount");
             sls = SimpleLineSymbol;
             sms = SimpleMarkerSymbol;
 
+            // User four breaks to cluster
             small = new sms("circle", 25,
                         new sls(sls.STYLE_SOLID, new Color([140,177,210,0.5]), 15),
                         new Color([140,177,210,0.75]));
             medium = new sms("circle", 50,
-                        new sls(sls.STYLE_SOLID, new Color([64,128,153,0.5]), 15),
-                        new Color([64,128,153,0.75]));
+                        new sls(sls.STYLE_SOLID, new Color([97,147,179,0.5]), 15),
+                        new Color([97,147,179,0.75]));
             large = new sms("circle", 80,
-                        new sls(sls.STYLE_SOLID, new Color([20,72,77,0.5]), 15),
-                        new Color([20,72,77,0.75]));
+                        new sls(sls.STYLE_SOLID, new Color([59,110,128,0.5]), 15),
+                        new Color([59,110,128,0.75]));
             xlarge = new sms("circle", 110,
                         new sls(sls.STYLE_SOLID, new Color([20,72,77,0.5]), 15),
                         new Color([20,72,77,0.75]));
 
+            // Break values - can adjust easily
             renderer.addBreak(2, 5, small);
             renderer.addBreak(5, 20, medium);
             renderer.addBreak(20, 100, large);
