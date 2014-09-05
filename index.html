@@ -175,14 +175,13 @@
         popup = map.infoWindow;
         popup.highlight = false;
         popup.titleInBody = false;
-        //popup.domNode.style.marginTop = "-13px";
+        //popup.domNode.style.marginTop = "-13px";  // for pins only
 
-        // For zoomOnClick on clusters - all fields
-        // infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-event'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}<hr><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
-
+        // zoomOnClick on clusters - all fields
         infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-content-background'><div class='popup-event-name'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}</div><p class='popup-event-header header-space'>HOST: <a target='_blank' href='${Url}'>${Organizati}</a></p><p class='popup-event-header header-nospace'>CONTACT: <a target='_top' href='mailto:${Email}?subject=GIS Day Event'>${Name}</a></p>");
 
-
+        // Esri marker for single locations and selections
+        //defaultSym = new createPictureSymbol("//esri.github.io/quickstart-map-js/images/blue-pin.png", 0, 8, 8, 15);
         defaultSym = new SimpleMarkerSymbol("circle", 9,
                         new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85,125,140,1]), 2),
                         new Color([255,255,255,1]));
@@ -193,14 +192,16 @@
 
         // Wire map events
         map.on("load", function () {
+            // Our scrollwheel behavior is inverse to other system, turning off.
+            map.disableScrollWheelZoom();
             // Add layer
             addFeatureService();
         });
-        //map.on("layer-add-result", layerAdded);
 
         // close the info window when the map is clicked
         map.on('click', cleanUp);
 
+        // dynamically reposition popups when map moves
         map.on('extent-change', function (e) {
             if (map.infoWindow.isShowing) {
                map.infoWindow.reposition();
@@ -214,11 +215,7 @@
             }
         });
 
-        // clear singles when infoWindow is hidden
-        map.infoWindow.on("hide", function () {
-            clusterLayer.clearSingles();
-        });
-
+        // wire infoWindow events
         map.infoWindow.on("selection-change", function () {
             var selGraphic = map.infoWindow.getSelectedFeature();
             if (map.infoWindow._lastSelectedFeature) {
@@ -230,7 +227,10 @@
             }
         });
 
-
+        // clear singles when infoWindow is hidden
+        map.infoWindow.on("hide", function () {
+            clusterLayer.clearSingles();
+        });
 
         function cleanUp() {
             map.infoWindow.hide();
@@ -255,18 +255,13 @@
                 "labelColor": "#fff",
                 "resolution": map.extent.getWidth() / map.width,
                 //"singleColor": "#888",
-                //"singleTemplate": popupTemplate,
                 "singleTemplate": infoTemplate,
                 "useDefaultSymbol": false,
                 "zoomOnClick": true,
                 "objectIdField": "FID",
                 outFields: ["Name", "Organizati", "department", "Alocation", "AAdress", "City", "State", "Province", "Country", "PostCode", "Telephone", "Email", "Url", "EventType", "Descriptio", "PrimaryAud", "EventName"]
             });
-
-            // Esri marker for single locations
-            //defaultSym = new createPictureSymbol("//esri.github.io/quickstart-map-js/images/blue-pin.png", 0, 8, 8, 15);
      
-
             renderer = new ClassBreaksRenderer(defaultSym, "clusterCount");
             sls = SimpleLineSymbol;
             sms = SimpleMarkerSymbol;

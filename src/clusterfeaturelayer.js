@@ -581,15 +581,17 @@ define([
         onClick: function(e) {
             this._onClusterClick(e);
             // zoom in to cluster if possible
-            if(
-                this._zoomOnClick &&
-                    e.graphic.attributes.clusterCount > 1 &&
-                        this._map.getZoom() !== this._map.getMaxZoom()
-            ) {
-                this._map.centerAndZoom(
-                    e.graphic.geometry,
-                    this._map.getZoom() + 1
-                );
+            if (this._zoomOnClick && e.graphic.attributes.clusterCount > 1 &&
+                        this._map.getZoom() !== this._map.getMaxZoom()) 
+            {
+                // Zoom to level that shows all points in cluster, no necessarily the extent
+                var extent = this._getClusterExtent(e.graphic);
+                if (extent.getWidth()) {
+                    this._map.setExtent(extent.expand(1.5), true);  
+                } else {
+                    this._map.centerAndZoom(e.graphic.geometry, this._map.getMaxZoom());
+                }
+
             } else {
                 // remove any previously showing single features
                 this.clearSingles(this._singles);
@@ -713,16 +715,16 @@ define([
         },
 
         _hideInfoWindow: function () {
-            var ext, extent;
-
+            var extent;
             if (!this._map.infoWindow.isShowing) {
                 return;
             }
-
+            // If there's single symbol cluster overlap, remove the popup
             for ( var i = 0; i < this._clusters.length; i++ ) {
-                ext = this._clusters[i].attributes.extent;
-                // TODO - need to calc the min size of every extent (based on size of point symbol)
-                extent = new Extent(ext[0],ext[1],ext[2],ext[3], this._map.spatialReference);
+                // ext = this._clusters[i].attributes.extent;
+                // // TODO - need to calc the min size of every extent (based on size of point symbol)
+                // extent = new Extent(ext[0],ext[1],ext[2],ext[3], this._map.spatialReference);
+                extent = this._getClusterExtent(this._clusters[i]);
                 if (extent.getWidth() && extent.contains(this._map.infoWindow.location)) {
                     this._map.infoWindow.hide();
                     break;
@@ -730,11 +732,23 @@ define([
             }
         },
 
+        _findCluster: function(id) {
+            var cg = arrayUtils.filter(this.graphics, function(g) {
+                return ! g.symbol &&
+                    g.attributes.clusterId == c.attributes.clusterId;
+            });
+        },
+
+        _getClusterExtent: function(cluster) {
+            var ext;
+            ext = cluster.attributes.extent;
+            return new Extent(ext[0],ext[1],ext[2],ext[3], this._map.spatialReference);
+        },
+
         _getClusteredExtent: function () {
-            var ext, extent, clusteredExtent;
+            var extent, clusteredExtent;
             for ( var i = 0; i < this._clusters.length; i++ ) {
-                ext = this._clusters[i].attributes.extent;
-                extent = new Extent(ext[0],ext[1],ext[2],ext[3], this._map.spatialReference);
+                extent = this._getClusteredExtent(this._clusters[i]);
                 if (!clusteredExtent) {
                     clusteredExtent = extent; 
                 } else {
@@ -742,6 +756,16 @@ define([
                 }
             }
             return clusteredExtent;
+        },
+
+        _getClusterSingles: function (id) {
+            var singles = [];
+                for ( var i = 0, il = this._clusterData.length; i < il; i++) {
+                    if ( id == this._clusterData[i].attributes.clusterId ) {
+                        singles.push(this._clusterData[i]);
+                    }
+                }
+            return singles;
         },
 
         _showAllClusters: function() {
