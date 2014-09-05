@@ -9,6 +9,7 @@ define([
 
     'esri/SpatialReference',
     'esri/geometry/Point',
+    'esri/geometry/Extent',
     'esri/graphic',
 
     'esri/symbols/SimpleMarkerSymbol',
@@ -30,7 +31,7 @@ define([
 
 ], function (
     declare, arrayUtils, lang, Color, connect, on, all,
-    SpatialReference, Point, Graphic,
+    SpatialReference, Point, Extent, Graphic,
     SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, TextSymbol, Font,
     ClassBreaksRenderer,
     esriRequest, symbolJsonUtils, rendererJsonUtil,
@@ -270,10 +271,18 @@ define([
                 this._currentClusterGraphic = g;
             // Text symbol was clicked
             } else {
-                //g.symbol.declaredClass === 'esri.symbol.TextSymbol') {
                 this._currentClusterLabel = g;
                 this._currentClusterGraphic = this._getCurrentClusterGraphic(g);
             }
+            // } else if (g.symbol.declaredClass === 'esri.symbol.TextSymbol') {
+                // this._currentClusterLabel = g;
+                // this._currentClusterGraphic = this._getCurrentClusterGraphic(g);
+            // Pin was clicked
+            // } else {
+            //     this._currentClusterGraphic = null;
+            //     this._getCurrentLabelGraphic = null;
+            // }
+
         },
 
         _getCurrentClusterGraphic: function (c) {
@@ -299,11 +308,9 @@ define([
             this._query.outFields = this._outFields;
             // listen to extent-change so data is re-clustered when zoom level changes
             this._extentChange = on(map, 'extent-change', lang.hitch(this, '_reCluster'));
-            // listen for popup hide/show
-            if (this._zoomOnClick) {
-                map.infoWindow.on('hide', lang.hitch(this, '_popupVisibilityChange'));
-                map.infoWindow.on('show', lang.hitch(this, '_popupVisibilityChange'));
-            }
+            // listen for popup hide/show - hide clusters when pins are shown
+            map.infoWindow.on('hide', lang.hitch(this, '_popupVisibilityChange'));
+            map.infoWindow.on('show', lang.hitch(this, '_popupVisibilityChange'));
 
             var layerAdded = on(map, 'layer-add', lang.hitch(this, function(e) {
                 if (e.layer === this) {
@@ -351,17 +358,22 @@ define([
             return div;
         },
 
-        _unsetMap: function() {
+        _unsetMap: function () {
             this.inherited(arguments);
             this._extentChange.remove();
         },
 
-        _onClusterClick: function(e) {
+        _onClusterClick: function (e) {
             var attr;
+            // Point clicked, done.
+            if (e.graphic.attributes.clusterCount === 1) {
+                return;
+            }
+
             if (e.graphic) {
-             attr = e.graphic.attributes;
-             // show/hide
-             this._setCurrentClusterGraphics(e.graphic);
+                attr = e.graphic.attributes;
+                // show/hide
+                this._setCurrentClusterGraphics(e.graphic);
             }
             if (attr && attr.clusterCount) {
                 var source = arrayUtils.filter(this._clusterData, function(g) {
@@ -403,7 +415,9 @@ define([
                 var queries = [];
                 if (uncached.length > this._returnLimit) {
                     while(uncached.length) {
-                        this._query.where = this._objectIdField + ' IN (' + (uncached.splice(0, this._returnLimit - 1)).join(',') + ')';
+                        // Improve performance by just passing list of IDs
+                        //this._query.where = this._objectIdField + ' IN (' + ().join(',') + ')';
+                        this._query.objectIds = uncached.splice(0, this._returnLimit - 1);
                         queries.push(this.queryTask.execute(this._query));
                     }
                     all(queries).then(lang.hitch(this, function(res) {
@@ -415,16 +429,18 @@ define([
                         });
                     }));
                 } else {
-                    this._query.where = this._objectIdField + ' IN (' + uncached.join(',') + ')';
+                    // Improve performance by just passing list of IDs
+                    //this._query.where = this._objectIdField + ' IN (' + uncached.join(',') + ')';
+                    this._query.objectIds = uncached.splice(0, this._returnLimit - 1);
                     this.queryTask.execute(this._query).then(
                         lang.hitch(this, '_onFeaturesReturned'), this._onError
                     );
                 }
             } else if (this._objectIdCache.length) {
-                // this._onFeaturesReturned({ // kinda hacky here
-                //     features: []
-                // });
-                this._clusterGraphics();
+                this._onFeaturesReturned({ // kinda hacky here
+                    features: []
+                });
+                //this._clusterGraphics();
             } else {
                 this.clear();
             }
@@ -460,14 +476,17 @@ define([
                 features = results.features;
             }
             var len = features.length;
-            this._clusterData.length = 0;
-            this.clear();
+            //this._clusterData.length = 0;
+            //this.clear();
             if (len) {
+                this._clusterData.lenght = 0;
+                this.clear();
                 arrayUtils.forEach(features, function(feat) {
                     this._clusterCache[feat.attributes[this._objectIdField]] = feat;
                 }, this);
+                this._clusterData = concat(features, inExtent);   
             }
-            this._clusterData = concat(features, inExtent);
+            //this._clusterData = concat(features, inExtent);
             this._clusterGraphics();
             //var end = new Date().valueOf();
             //console.debug('#_onFeaturesReturned end', (end - start)/1000);
@@ -497,8 +516,7 @@ define([
                 return;
             }
 
-            // add the new data to _clusterData so that it's included in clusters
-            // when the map level changes
+            // add the new data to _clusterData so that it's included in clusters when the map level changes
             this._clusterData.push(p);
             var clustered = false;
             // look for an existing cluster for the new point
@@ -576,6 +594,7 @@ define([
 
         // internal methods
         _clusterGraphics: function() {
+            //var infoWindowGraphicPt = this._getInfoWindowGraphicPt();
             this.clear();
             // first time through, loop through the points
             for ( var j = 0, jl = this._clusterData.length; j < jl; j++ ) {
@@ -584,6 +603,7 @@ define([
                 var feature = this._clusterData[j];
                 var clustered = false;
                 var numClusters = this._clusters.length;
+                // Add point to existing cluster
                 for ( var i = 0; i < this._clusters.length; i++ ) {
                     var c = this._clusters[i];
                     if ( this._clusterTest(point, c) ) {
@@ -592,12 +612,13 @@ define([
                         break;
                     }
                 }
-
+                // Or create a new cluster (of one)
                 if ( ! clustered ) {
                     this._clusterCreate(feature, point);
                 }
             }
             this._showAllClusters();
+            this._hideInfoWindow();
         },
 
         _clusterTest: function(p, cluster) {
@@ -667,6 +688,23 @@ define([
                 }
             };
             this._clusters.push(cluster);
+        },
+
+        _hideInfoWindow: function () {
+            var ext, extent;
+
+            if (!this._map.infoWindow.isShowing) {
+                return;
+            }
+
+            for ( var i = 0; i < this._clusters.length; i++ ) {
+                ext = this._clusters[i].attributes.extent;
+                extent = new Extent(ext[0],ext[1],ext[2],ext[3], this._map.spatialReference);
+                if (extent.getWidth() && extent.contains(this._map.infoWindow.location)) {
+                    this._map.infoWindow.hide();
+                    break;
+                }
+            }
         },
 
         _showAllClusters: function() {
