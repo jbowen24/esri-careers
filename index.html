@@ -97,6 +97,18 @@
             right: 45px;
         }
 
+        .simpleGeocoder .esriGeocoderContainer {
+            width: 225px;
+        }
+
+        .simpleGeocoder .esriGeocoder input {
+          width: 160px;
+        }
+
+        .simpleGeocoder .esriGeocoderIcon {
+            margin: 8px 0 6px 6px;
+        }
+
     </style>
 <!-- 
     <script type="text/javascript">
@@ -160,7 +172,7 @@
         popup = map.infoWindow;
         popup.highlight = false;
         popup.titleInBody = false;
-        popup.domNode.style.marginTop = "-13px";
+        //popup.domNode.style.marginTop = "-13px";
 
         // Wire map events
         map.on("load", function () {
@@ -230,7 +242,10 @@
             });
 
             // Esri marker for single locations
-            defaultSym = new createPictureSymbol("//esri.github.io/quickstart-map-js/images/blue-pin.png", 0, 8, 8, 15);
+            //defaultSym = new createPictureSymbol("//esri.github.io/quickstart-map-js/images/blue-pin.png", 0, 8, 8, 15);
+            defaultSym = new SimpleMarkerSymbol("circle", 9,
+                        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85,125,140,1]), 2),
+                        new Color([255,255,255,1]));
 
             renderer = new ClassBreaksRenderer(defaultSym, "clusterCount");
             sls = SimpleLineSymbol;

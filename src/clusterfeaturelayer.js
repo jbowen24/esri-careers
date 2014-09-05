@@ -188,6 +188,8 @@ define([
             this._currentClusterGraphic = null;
             this._currentClusterLabel = null;
 
+            this._visitedExtent = null;
+
             this.detailsLoaded = false;
 
             this._query = new Query();
@@ -242,10 +244,27 @@ define([
             }
         },
 
+        // Recluster when extent changes
         _reCluster: function () {
             // update resolution
             this._clusterResolution = this._map.extent.getWidth() / this._map.width;
-            this._getObjectIds(this._map.extent);
+            // Smarter cluster, only query when we have to
+            //var clusteredExtent = this._getClusteredExtent();
+            // Fist time
+            if (!this._visitedExtent) {
+                console.log("first time - getting ids");
+                this._getObjectIds(this._map.extent);
+            // New extent
+            } else if (!this._visitedExtent.contains(this._map.extent)) {
+                console.log("doesn't contain extent - getting ids");
+                this._getObjectIds(this._map.extent);
+            // Been there
+            } else {
+                console.log("contains extent - just clustering");
+                this._clusterGraphics();
+            }
+            // update clustered extent
+            this._visitedExtent = this._visitedExtent ? this._visitedExtent.union(this._map.extent) : this._map.extent;
         },
 
         _popupVisibilityChange: function () {
@@ -386,6 +405,9 @@ define([
         _getObjectIds: function(extent) {
             if (this.url) {
                 var ext = extent || this._map.extent;
+
+                // only query if zooming out - TODO - can do more optimizations
+
                 this._query.objectIds = null;
                 if (this._where) {
                     this._query.where = this._where;
@@ -699,12 +721,27 @@ define([
 
             for ( var i = 0; i < this._clusters.length; i++ ) {
                 ext = this._clusters[i].attributes.extent;
+                // TODO - need to calc the min size of every extent (based on size of point symbol)
                 extent = new Extent(ext[0],ext[1],ext[2],ext[3], this._map.spatialReference);
                 if (extent.getWidth() && extent.contains(this._map.infoWindow.location)) {
                     this._map.infoWindow.hide();
                     break;
                 }
             }
+        },
+
+        _getClusteredExtent: function () {
+            var ext, extent, clusteredExtent;
+            for ( var i = 0; i < this._clusters.length; i++ ) {
+                ext = this._clusters[i].attributes.extent;
+                extent = new Extent(ext[0],ext[1],ext[2],ext[3], this._map.spatialReference);
+                if (!clusteredExtent) {
+                    clusteredExtent = extent; 
+                } else {
+                    clusteredExtent = clusteredExtent.union(extent);
+                }
+            }
+            return clusteredExtent;
         },
 
         _showAllClusters: function() {
