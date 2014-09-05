@@ -146,7 +146,10 @@
         var map,
             popup,
             clusterLayer,
-            geocoder;
+            geocoder,
+            infoTemplate,
+            defaultSym,
+            selectedSym;
 
         // Create map
         map = new Map("mapDiv", {
@@ -173,6 +176,20 @@
         popup.highlight = false;
         popup.titleInBody = false;
         //popup.domNode.style.marginTop = "-13px";
+
+        // For zoomOnClick on clusters - all fields
+        // infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-event'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}<hr><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
+
+        infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-content-background'><div class='popup-event-name'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}</div><p class='popup-event-header header-space'>HOST: <a target='_blank' href='${Url}'>${Organizati}</a></p><p class='popup-event-header header-nospace'>CONTACT: <a target='_top' href='mailto:${Email}?subject=GIS Day Event'>${Name}</a></p>");
+
+
+        defaultSym = new SimpleMarkerSymbol("circle", 9,
+                        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85,125,140,1]), 2),
+                        new Color([255,255,255,1]));
+
+        selectedSym = new SimpleMarkerSymbol("circle", 11,
+                        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85,125,255,1]), 3),
+                        new Color([255,255,255,1]));
 
         // Wire map events
         map.on("load", function () {
@@ -202,6 +219,19 @@
             clusterLayer.clearSingles();
         });
 
+        map.infoWindow.on("selection-change", function () {
+            var selGraphic = map.infoWindow.getSelectedFeature();
+            if (map.infoWindow._lastSelectedFeature) {
+                map.infoWindow._lastSelectedFeature.setSymbol(defaultSym);
+            }
+            if (selGraphic) {
+                selGraphic.setSymbol(selectedSym);
+                map.infoWindow._lastSelectedFeature = selGraphic;
+            }
+        });
+
+
+
         function cleanUp() {
             map.infoWindow.hide();
             clusterLayer.clearSingles();
@@ -209,21 +239,13 @@
 
         // Create a feature layer to get feature service
         function addFeatureService() {
-            var infoTemplate,
-                picBaseUrl,
-                defaultSym,
-                renderer,
+            var renderer,
                 sls,
                 sms,
                 small,
                 medium,
                 large,
                 xlarge;
-
-            // For zoomOnClick on clusters - all fields
-            // infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-event'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}<hr><a href=${Url}>${Organizati}</a><br>${Alocation}<br>${AAdress} ${City} ${State} ${Province} ${Country} ${PostCode}<br><a href=${Email}>${Name}</a><br>${Telephone}");
-
-            infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-content-background'><div class='popup-event-name'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}</div><p class='popup-event-header header-space'>HOST: <a target='_blank' href='${Url}'>${Organizati}</a></p><p class='popup-event-header header-nospace'>CONTACT: <a target='_top' href='mailto:${Email}?subject=GIS Day Event'>${Name}</a></p>");
 
             // Add cluster renderer
             clusterLayer = new ClusterFeatureLayer({
@@ -243,9 +265,7 @@
 
             // Esri marker for single locations
             //defaultSym = new createPictureSymbol("//esri.github.io/quickstart-map-js/images/blue-pin.png", 0, 8, 8, 15);
-            defaultSym = new SimpleMarkerSymbol("circle", 9,
-                        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85,125,140,1]), 2),
-                        new Color([255,255,255,1]));
+     
 
             renderer = new ClassBreaksRenderer(defaultSym, "clusterCount");
             sls = SimpleLineSymbol;
@@ -274,6 +294,15 @@
             // Providing a ClassBreakRenderer is also optional
             clusterLayer.setRenderer(renderer);
             map.addLayer(clusterLayer);
+
+            clusterLayer.on("mouse-over", autoShowPopup);
+        }
+
+        function autoShowPopup (e) {
+            var infoWindow;
+            if (e.graphic.attributes.clusterCount === 1) {
+                e.graphic._graphicsLayer.onClick(e);
+            }
         }
 
         // Create png marker
