@@ -263,28 +263,14 @@ define([
             this._visitedExtent = this._visitedExtent ? this._visitedExtent.union(this._map.extent) : this._map.extent;
         },
 
-        _popupVisibilityChange: function (e) {
-            var hide = this._map.infoWindow.isShowing;
-            this._hideClickedCluster(hide);
-            // Prevents double-clicking to show popups on single features
-            if (!hide) {
-                this.clearSingles();
-            }
-        },
-
-        _hideClickedCluster: function (hide) {
-            if (this._currentClusterGraphic && this._currentClusterLabel) {
-                if (!hide) {
-                    this._currentClusterGraphic.show();
-                    this._currentClusterLabel.show();
-                } else {
-                    this._currentClusterGraphic.hide();
-                    this._currentClusterLabel.hide();
-                }
-            }
-        },
-
         _setCurrentClusterGraphics: function (g) {
+            // Reset
+            if (g === null) {
+                this._currentClusterGraphic = null;
+                this._currentClusterLabel = null;
+                return;
+            }
+
             // Cluster was clicked
             if (g.symbol === null) {
                 this._currentClusterLabel = this._getCurrentLabelGraphic(g);
@@ -295,14 +281,13 @@ define([
                 this._currentClusterGraphic = this._getCurrentClusterGraphic(g);
             }
             // } else if (g.symbol.declaredClass === 'esri.symbol.TextSymbol') {
-                // this._currentClusterLabel = g;
-                // this._currentClusterGraphic = this._getCurrentClusterGraphic(g);
+            //     this._currentClusterLabel = g;
+            //     this._currentClusterGraphic = this._getCurrentClusterGraphic(g);
             // Pin was clicked
             // } else {
             //     this._currentClusterGraphic = null;
             //     this._getCurrentLabelGraphic = null;
             // }
-
         },
 
         _getCurrentClusterGraphic: function (c) {
@@ -320,6 +305,32 @@ define([
             });
             return gArray[0];
         },
+
+        _popupVisibilityChange: function (e) {
+            var show = this._map.infoWindow.isShowing;
+            // Popup hidden, show cluster
+            this._showClusterClicked(!show);
+            // Remove singles from layer
+            if (!show) {
+                //if (this._currentClusterGraphic && this._currentClusterLabel) {
+                    this.clearSingles();
+                //}
+            }
+        },
+
+        // Toggle cluster 
+        _showClusterClicked: function (show) {
+            if (this._currentClusterGraphic && this._currentClusterLabel) {
+                if (show) {
+                    this._currentClusterGraphic.show();
+                    this._currentClusterLabel.show();
+                } else {
+                    this._currentClusterGraphic.hide();
+                    this._currentClusterLabel.hide();
+                }
+            }
+        },
+
 
         // override esri/layers/GraphicsLayer methods
         _setMap: function (map, surface) {
@@ -417,7 +428,7 @@ define([
             console.warn('ReturnIds Error', err);
         },
 
-        _onIdsReturned: function(results) {
+        _onIdsReturned: function (results) {
             var uncached = difference(results, this._objectIdCache.length, this._objectIdHash);
             this._objectIdCache = concat(this._objectIdCache, uncached);
             if (uncached && uncached.length) {
@@ -455,6 +466,7 @@ define([
             }
         },
 
+        // Return a cache of features in the current extent
         _inExtent: function() {
             //var start = new Date().valueOf();
             //console.debug('#inExtent start');
@@ -462,6 +474,7 @@ define([
             var len = this._objectIdCache.length;
             var valid = [];
 
+            // See if cached feature is in current extent
             while (len--) {
                 var oid = this._objectIdCache[len];
                 var cached = this._clusterCache[oid];
@@ -474,6 +487,7 @@ define([
             return valid;
         },
 
+        // Add features to cluster cache and refine cluster data to draw - clears all graphics!
         _onFeaturesReturned: function(results) {
             //var start = new Date().valueOf();
             //console.debug('#_onFeaturesReturned start');
@@ -487,15 +501,22 @@ define([
             var len = features.length;
             //this._clusterData.length = 0;
             //this.clear();
+            // Update the cluster features for drawing
             if (len) {
-                this._clusterData.lenght = 0;
-                this.clear();
+                //this._clusterData.lenght = 0;  // Bug
+                this._clusterData.length = 0;
+                // Delete all graphics in layer (not local features)
+                this.clear();  
+                // Append actual feature to oid cache
                 arrayUtils.forEach(features, function(feat) {
                     this._clusterCache[feat.attributes[this._objectIdField]] = feat;
                 }, this);
+                // Refine features to draw
                 this._clusterData = concat(features, inExtent);   
             }
             //this._clusterData = concat(features, inExtent);
+
+            // Cluster the features
             this._clusterGraphics();
             //var end = new Date().valueOf();
             //console.debug('#_onFeaturesReturned end', (end - start)/1000);
@@ -576,23 +597,25 @@ define([
 
             // Single cluster click - only good until re-cluster!
             if (e.graphic.attributes.clusterCount === 1 ) {
-                this.clearSingles(this._singles);
-                
+                // Unset cluster graphics
+                this._setCurrentClusterGraphics(null);
+                // Remove graphics from layer
+                this.clearSingles(this._singles);                
                 e.stopPropagation();
+                // TODO - simplify for single clicks
                 var singles = this._getClusterSingles(e.graphic.attributes.clusterId);
-
                 arrayUtils.forEach(singles, function(g) {
                     g.setSymbol(this._getDefaultSymbol(g));
                     g.setInfoTemplate(this._singleTemplate);
                 }, this);
-
+                // Add graphic to layer
                 this._addSingleGraphics(singles);
                 this._map.infoWindow.setFeatures(singles);
                 // This hack helps show the popup to show on both sides of the dateline!
                 this._map.infoWindow.show(e.graphic.geometry);
                 this._map.infoWindow.show(e.graphic.geometry);
             }
-            // Super zoom to true clusters (more than 1)
+            // Multi-cluster click, super zoom to cluster
             else if (this._zoomOnClick && e.graphic.attributes.clusterCount > 1 && this._map.getZoom() !== this._map.getMaxZoom()) 
             {
                 // Zoom to level that shows all points in cluster, not necessarily the extent
@@ -602,10 +625,10 @@ define([
                 } else {
                     this._map.centerAndZoom(e.graphic.geometry, this._map.getMaxZoom());
                 }
-            // Show popup by finding actual singles and assigning to infoWindow
+            // Multi-cluster click, show popup by finding actual singles and assigning to infoWindow
             } else {
                 e.stopPropagation();
-                // Remove any previously showing single features
+                // Remove graphics from layer
                 this.clearSingles(this._singles);
                 // find single graphics that make up the cluster that was clicked
                 // would be nice to use filter but performance tanks with large arrays in IE
@@ -616,19 +639,23 @@ define([
                 } else {
                     // stop the click from bubbling to the map
                     e.stopPropagation();
+                    // Add graphics to layer
                     this._addSingleGraphics(singles);
                     this._map.infoWindow.setFeatures(this._singles);
                     // This hack helps show the popup to show on both sides of the dateline!
                     this._map.infoWindow.show(e.graphic.geometry);
                     this._map.infoWindow.show(e.graphic.geometry);
-                    this._hideClickedCluster(true);
+                    //this._hideClickedCluster(true);
+                    this._showClusterClicked(false);
                 }
             }
         },
 
-        // internal methods
+        // Internal graphic methods
+
+        // Build new cluster array from features and draw graphics
         _clusterGraphics: function() {
-            // Remove all existing graphics  - hide popup?
+            // Remove all existing graphics from layer
             this.clear();
             // first time through, loop through the points
             for ( var j = 0, jl = this._clusterData.length; j < jl; j++ ) {
@@ -647,15 +674,14 @@ define([
                     }
                 }
                 // Or create a new cluster (of one)
-                if ( ! clustered ) {
+                if (!clustered) {
                     this._clusterCreate(feature, point);
                 }                
             }
-            // TODO - Can't clear because of infowindow.features
-            //this.clearSingles();
             this._showAllClusters();
         },
 
+        // See if point is within the tolerance (pixels) of current cluster
         _clusterTest: function(p, cluster) {
             var distance = (
                 Math.sqrt(
@@ -670,7 +696,7 @@ define([
         // also give the point an attribute called clusterId
         // that corresponds to its cluster
         _clusterAddPoint: function(feature, p, cluster) {
-            // average in the new point to the cluster geometry
+            // Average in the new point to the cluster geometry
             var count, x, y;
             count = cluster.attributes.clusterCount;
             x = (p.x + (cluster.x * count)) / (count + 1);
@@ -678,8 +704,7 @@ define([
             cluster.x = x;
             cluster.y = y;
 
-            // build an extent that includes all points in a cluster
-            // extents are for debug/testing only...not used by the layer
+            // Build an extent that includes all points in a cluster
             if ( p.x < cluster.attributes.extent[0] ) {
                 cluster.attributes.extent[0] = p.x;
             } else if ( p.x > cluster.attributes.extent[2] ) {
@@ -691,7 +716,7 @@ define([
                 cluster.attributes.extent[3] = p.y;
             }
 
-            // increment the count
+            // Increment the count
             cluster.attributes.clusterCount++;
             // attributes might not exist
             if ( ! p.hasOwnProperty('attributes') ) {
@@ -701,9 +726,8 @@ define([
             feature.attributes.clusterId = p.attributes.clusterId = cluster.attributes.clusterId;
         },
 
-        // point passed to clusterCreate isn't within the
-        // clustering distance specified for the layer so
-        // create a new cluster for it
+        // Point isn't within the clustering distance specified for the layer so create a new cluster for it
+        // TODO: Random and not based on grid dispersion!
         _clusterCreate: function(feature, p) {
             var clusterId = this._clusters.length + 1;
             // console.log('cluster create, id is: ', clusterId);
@@ -725,56 +749,7 @@ define([
             this._clusters.push(cluster);
         },
 
-        // Hide popup if feature is cluster
-        // _checkHideInfoWindow: function (cluster) { 
-        //     if (!this._map.infoWindow.isShowing) {
-        //         return;
-        //     }   
-        //     extent = this._getClusterExtent(cluster);
-        //     if (this._map.infoWindow.features[0].geometry) {
-        //         //this._map.graphics.add(new Graphic(extent, new SimpleLineSymbol()));
-        //         if (extent.contains(this._map.infoWindow.features[0].geometry)) {
-        //             this._map.infoWindow.hide();
-        //         }
-        //     }
-        // },
-
-        _findCluster: function(id) {
-            var cg = arrayUtils.filter(this.graphics, function(g) {
-                return ! g.symbol &&
-                    g.attributes.clusterId == c.attributes.clusterId;
-            });
-        },
-
-        _getClusterExtent: function(cluster) {
-            var ext;
-            ext = cluster.attributes.extent;
-            return new Extent(ext[0],ext[1],ext[2],ext[3], this._map.spatialReference);
-        },
-
-        _getClusteredExtent: function () {
-            var extent, clusteredExtent;
-            for ( var i = 0; i < this._clusters.length; i++ ) {
-                extent = this._getClusteredExtent(this._clusters[i]);
-                if (!clusteredExtent) {
-                    clusteredExtent = extent; 
-                } else {
-                    clusteredExtent = clusteredExtent.union(extent);
-                }
-            }
-            return clusteredExtent;
-        },
-
-        _getClusterSingles: function (id) {
-            var singles = [];
-                for ( var i = 0, il = this._clusterData.length; i < il; i++) {
-                    if ( id == this._clusterData[i].attributes.clusterId ) {
-                        singles.push(this._clusterData[i]);
-                    }
-                }
-            return singles;
-        },
-
+        // Add all graphics to layer and fire "clusters-shown" event
         _showAllClusters: function() {
             //var start = new Date().valueOf();
             //console.debug('#_showAllClusters start');
@@ -788,6 +763,7 @@ define([
             //console.debug('#_showAllClusters end', (end - start)/1000);
         },
 
+        // Add graphic and to layer
         _showCluster: function(c) {
             var point = new Point(c.x, c.y, this._sr);
             var count = c.attributes.clusterCount;
@@ -815,6 +791,44 @@ define([
             );
         },
 
+        // Internal utility functions
+        _findCluster: function(id) {
+            var cg = arrayUtils.filter(this.graphics, function(g) {
+                return ! g.symbol &&
+                    g.attributes.clusterId == c.attributes.clusterId;
+            });
+        },
+
+        _getClusterExtent: function(cluster) {
+            var ext;
+            ext = cluster.attributes.extent;
+            return new Extent(ext[0],ext[1],ext[2],ext[3], this._map.spatialReference);
+        },
+
+        _getClusteredExtent: function () {
+            var extent, clusteredExtent;
+            for ( var i = 0; i < this._clusters.length; i++ ) {
+                extent = this._getClusteredExtent(this._clusters[i]);
+                if (!clusteredExtent) {
+                    clusteredExtent = extent; 
+                } else {
+                    clusteredExtent = clusteredExtent.union(extent);
+                }
+            }
+            return clusteredExtent;
+        },
+
+        // Return all singles for a given cluster id
+        _getClusterSingles: function (id) {
+            var singles = [];
+                for ( var i = 0, il = this._clusterData.length; i < il; i++) {
+                    if ( id == this._clusterData[i].attributes.clusterId ) {
+                        singles.push(this._clusterData[i]);
+                    }
+                }
+            return singles;
+        },
+
         _addSingleGraphics: function(singles) {
             // add single graphics to the cluster layer
             arrayUtils.forEach(singles, function(g) {
@@ -828,6 +842,20 @@ define([
             }, this);
             //this._map.infoWindow.setFeatures(this._singles);
         },
+
+                // Hide popup if feature is clustered
+        // _checkHideInfoWindow: function (cluster) { 
+        //     if (!this._map.infoWindow.isShowing) {
+        //         return;
+        //     }   
+        //     extent = this._getClusterExtent(cluster);
+        //     if (this._map.infoWindow.features[0].geometry) {
+        //         //this._map.graphics.add(new Graphic(extent, new SimpleLineSymbol()));
+        //         if (extent.contains(this._map.infoWindow.features[0].geometry)) {
+        //             this._map.infoWindow.hide();
+        //         }
+        //     }
+        // },
 
         _updateClusterGeometry: function(c) {
             // find the cluster graphic
