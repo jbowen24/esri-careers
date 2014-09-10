@@ -120,7 +120,7 @@
     </script> -->
 
     <!-- ArcGIS API for JavaScript library references -->
-    <script src="//js.arcgis.com/3.10compact"></script>
+        <script src="//js.arcgis.com/3.10compact"></script>
     <script>
     require(["esri/map",
         "esri/dijit/Geocoder",
@@ -176,13 +176,16 @@
         popup = map.infoWindow;
         popup.highlight = false;
         popup.titleInBody = false;
-        //popup.domNode.style.marginTop = "-13px";  // for pins only
+        //popup.domNode.style.marginTop = "-12px";  // for pins only
 
         // Popup content
         infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-content-background'><div class='popup-event-name'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}</div><p class='popup-event-header header-space'>HOST: <a target='_blank' href='${Url}'>${Organizati}</a></p><p class='popup-event-header header-nospace'>CONTACT: <a target='_top' href='mailto:${Email}?subject=GIS Day Event'>${Name}</a></p>");
 
         // Esri marker for single locations and selections
-        //defaultSym = new createPictureSymbol("//esri.github.io/quickstart-map-js/images/blue-pin.png", 0, 8, 8, 15);
+        //defaultSym = new createPictureSymbol("./images/blue-cluster-pin.png", 0, 8, 8, 15);
+        //selectedSym = new createPictureSymbol("./images/blue-pin.png", 0, 8, 8, 15);
+
+        // Optional non-pin styles
         defaultSym = new SimpleMarkerSymbol("circle", 9,
                         new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85, 125, 140, 1]), 2),
                         new Color([255, 255, 255, 1]));
@@ -191,96 +194,8 @@
                         new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85, 125, 255, 1]), 3),
                         new Color([255, 255, 255, 1]));
 
-        // Wire map events
-        map.on("load", function () {
-            // Scrollwheel zoom behavior is inverse to other systems, turning off.
-            map.disableScrollWheelZoom();
-            // Add layer
-            addFeatureService();
-            // Wire clusterlayer events
-            addClusterLayerEvents();
-        });
-
-        // Close the info window when the map is clicked
-        map.on('click', function () {
-            if (map.infoWindow.isShowing) {
-                map.infoWindow.hide();
-            }
-        });
-
-        // Dynamically reposition popups when map moves - causes popup to disapear in the far eastern hemisphere
-        //map.on('extent-change', function (e) {
-            //if (map.infoWindow.isShowing) {
-               //map.infoWindow.reposition();
-            //}
-        //});
-        
-        // Close the info window when esc is pressed
-        map.on('key-down', function(e) {
-            if (e.keyCode === 27) {
-                cleanUp();
-            }
-        });
-
-        // Save the last selected point in the graphics layer so we can highlight it
-        map.infoWindow.on("selection-change", function () {
-            var selIndex = map.infoWindow.selectedIndex,
-                selFeature;
-            if (selIndex !== -1) {
-                selFeature = map.infoWindow.features[selIndex];
-                map.infoWindow._lastSelected = new Graphic(selFeature.toJson());
-                map.infoWindow._lastSelected.setSymbol(selectedSym);
-                // Add it to map graphics layer - TODO
-                map.graphics.clear();
-                map.graphics.add(map.infoWindow._lastSelected);
-            }
-        });
-
-        // Clear singles when infoWindow is hidden
-        map.infoWindow.on("hide", function () {
-            cleanUp();
-        });
-
-        // Wire cluster layer events
-        function addClusterLayerEvents() {
-            clusterLayer.on("mouse-over", onMouseOverCluster);
-            clusterLayer.on("clusters-shown", onClustersShown);
-        }
-
-        // Hide popup if selected feature is clustered
-        function onClustersShown(clusters) {
-            var  i = 0,
-                extent,
-                selIndex = map.infoWindow.selectedIndex;
-            if (map.infoWindow.isShowing && selIndex !== -1) {
-                for (i; i < clusters.length; i++) {
-                    if (clusters[i].attributes.clusterCount > 1) {
-                        extent = clusterLayer._getClusterExtent(clusters[i]);
-                        if (extent.contains(map.infoWindow._lastSelected.geometry)) {
-                            // Selected graphic
-                            map.infoWindow.hide();
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Show popups on hover - can be optimized
-        function onMouseOverCluster (e) {
-            if (e.graphic.attributes.clusterCount === 1) {
-                e.graphic._graphicsLayer.onClick(e);
-            }
-        }
-
-        function cleanUp() {
-            map.infoWindow._lastSelectedFeature = null;
-            map.graphics.clear();
-            clusterLayer.clearSingles();
-        }
-
         // Create a feature layer to get feature service
-        function addFeatureService() {
+        function addClusterLayer() {
             var renderer,
                 sls,
                 sms,
@@ -305,7 +220,7 @@
                 "objectIdField": "FID",
                 outFields: ["Name", "Organizati", "department", "Alocation", "AAdress", "City", "State", "Province", "Country", "PostCode", "Telephone", "Email", "Url", "EventType", "Descriptio", "PrimaryAud", "EventName"]
             });
-     
+
             renderer = new ClassBreaksRenderer(defaultSym, "clusterCount");
             sls = SimpleLineSymbol;
             sms = SimpleMarkerSymbol;
@@ -351,7 +266,112 @@
             );
         }
 
+        // Create new graphic and add to map.graphics
+        function addSelectedFeature() {
+            var selIndex = map.infoWindow.selectedIndex,
+                selFeature;
+            if (selIndex !== -1) {
+                selFeature = map.infoWindow.features[selIndex];
+                // Remove old feature first
+                removeSelectedFeature();
+                // Add new graphic
+                map.infoWindow._lastSelected = new Graphic(selFeature.toJson());
+                map.infoWindow._lastSelected.setSymbol(selectedSym);
+                map.graphics.add(map.infoWindow._lastSelected);
+            }
+        }
+
+        // Remove graphic from map.graphics
+        function removeSelectedFeature() {
+            if (map.infoWindow._lastSelected) {
+                map.graphics.remove(map.infoWindow._lastSelected);
+                map.infoWindow._lastSelected = null;
+            }
+        }
+
+        // Show popups on hover - probably can be optimized
+        function onMouseOverCluster(e) {
+            if (e.graphic.attributes.clusterCount === 1) {
+                e.graphic._graphicsLayer.onClick(e);
+            }
+        }
+
+        // function onMouseOutCluster (e) {
+        //     if (map.infoWindow._lastSelected !== null) {
+        //         removeSelectedFeature();
+        //         map.infoWindow.hide();
+        //     }
+        // }
+
+        // Hide popup if selected feature is clustered
+        function onClustersShown(clusters) {
+            var  i = 0,
+                extent;
+            if (map.infoWindow.isShowing && map.infoWindow._lastSelected) {
+                for (i; i < clusters.length; i++) {
+                    if (clusters[i].attributes.clusterCount > 1) {
+                        extent = clusterLayer._getClusterExtent(clusters[i]);
+                        if (extent.contains(map.infoWindow._lastSelected.geometry)) {
+                            map.infoWindow.hide();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Wire cluster layer events
+        function addClusterLayerEvents() {
+            // Mouse over events
+            clusterLayer.on("mouse-over", onMouseOverCluster);
+            //clusterLayer.on("mouse-out", onMouseOutCluster);
+            // Clusters drawn
+            clusterLayer.on("clusters-shown", onClustersShown);
+        }
+
+        // Wire map events
+        map.on("load", function () {
+            // Scrollwheel zoom behavior is inverse to other systems, turning off.
+            map.disableScrollWheelZoom();
+            // Add layer
+            addClusterLayer();
+            addClusterLayerEvents();
+        });
+
+        // Close the info window when the map is clicked
+        map.on('click', function () {
+            if (map.infoWindow.isShowing) {
+                map.infoWindow.hide();
+            }
+        });
+
+        // Close the info window when esc is pressed
+        map.on('key-down', function (e) {
+            if (e.keyCode === 27) {
+                removeSelectedFeature();
+                map.infoWindow.hide();
+            }
+        });
+
+        // Dynamically reposition popups when map moves - causes popup to disapear in the far eastern hemisphere
+        // map.on('extent-change', function () {
+        //     if (map.infoWindow.isShowing) {
+        //         map.infoWindow.reposition();
+        //     }
+        // });
+
+        // Save the last selected graphic so we can highlight it
+        map.infoWindow.on("selection-change", function () {
+            addSelectedFeature();
+        });
+
+        // Clear selected graphic when infoWindow is hidden
+        map.infoWindow.on("hide", function () {
+            removeSelectedFeature();
+        });
+
     });
+
 </script>
 </head>
 <body>
