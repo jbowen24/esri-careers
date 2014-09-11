@@ -10,7 +10,7 @@ _oh dear..._
 
 1. [View Starter App - ArcGIS](https://ArcGIS.github.io/gis-day/index.html)
 
-2. [View Starter App - Esri-Leaflet](https://ArcGIS.github.io/gis-day/esri-leaflet.html)
+2. [View Starter App - Esri-Leaflet](http://ArcGIS.github.io/gis-day/esri-leaflet.html)
 
 ## Contributing
 
