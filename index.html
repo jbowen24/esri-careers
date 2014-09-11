@@ -83,7 +83,7 @@
         }
 
         .esriPopup .outerPointer.right {
-            background-position: -19px 0;
+            background-position: -19px -1px;
             right: 6px;
             height: 15px;
             width: 10px;
@@ -176,23 +176,28 @@
         popup = map.infoWindow;
         popup.highlight = false;
         popup.titleInBody = false;
-        //popup.domNode.style.marginTop = "-12px";  // for pins only
+        popup.domNode.style.marginTop = "-16px";  // for pins only
+        // popup.domNode.style.marginLeft = "-2px";  // for pins only
+        // popup.domNode.style.marginRight = "2px";  // for pins only
+
 
         // Popup content
         infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-content-background'><div class='popup-event-name'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}</div><p class='popup-event-header header-space'>HOST: <a target='_blank' href='${Url}'>${Organizati}</a></p><p class='popup-event-header header-nospace'>CONTACT: <a target='_top' href='mailto:${Email}?subject=GIS Day Event'>${Name}</a></p>");
 
         // Esri marker for single locations and selections
-        //defaultSym = new createPictureSymbol("./images/blue-cluster-pin.png", 0, 8, 8, 15);
-        //selectedSym = new createPictureSymbol("./images/blue-pin.png", 0, 8, 8, 15);
+        // defaultSym = new createPictureSymbol("./images/blue-cluster-pin.png", 0, 8, 8, 15);
+        // selectedSym = new createPictureSymbol("./images/blue-pin.png", 0, 8, 8, 15);
+        defaultSym = new createPictureSymbol("./images/blue-cluster-pin.png", 0, 9, 10, 19);
+        selectedSym = new createPictureSymbol("./images/blue-pin.png", 0, 9, 10, 19);
 
         // Optional non-pin styles
-        defaultSym = new SimpleMarkerSymbol("circle", 9,
-                        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85, 125, 140, 1]), 2),
-                        new Color([255, 255, 255, 1]));
+        // defaultSym = new SimpleMarkerSymbol("circle", 15,
+        //                 new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85, 125, 140, 1]), 2),
+        //                 new Color([255, 255, 255, 1]));
 
-        selectedSym = new SimpleMarkerSymbol("circle", 11,
-                        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85, 125, 255, 1]), 3),
-                        new Color([255, 255, 255, 1]));
+        // selectedSym = new SimpleMarkerSymbol("circle", 20,
+        //                 new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85, 125, 255, 1]), 3),
+        //                 new Color([255, 255, 255, 1]));
 
         // Create a feature layer to get feature service
         function addClusterLayer() {
@@ -226,7 +231,7 @@
             sms = SimpleMarkerSymbol;
 
             // User four breaks to cluster
-            small = new sms("circle", 25,
+            small = new sms("circle", 20,
                         new sls(sls.STYLE_SOLID, new Color([140,177,210,0.5]), 15),
                         new Color([140,177,210,0.75]));
             medium = new sms("circle", 50,
