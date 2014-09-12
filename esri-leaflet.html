@@ -19,6 +19,8 @@
         body {margin:0;padding:0;}
         #map {position: absolute;top:0;bottom:0;right:0;left:0;}
 
+        /* Clusters */
+
         .my-cluster {
             color: #fff;
         }
@@ -111,8 +113,25 @@
             line-height: 100px;
         }
 
+        /* popup */
+
         .leaflet-popup-pane, .leaflet-control {
             font-family: Avenir;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 6px;
+        }
+
+ /*       .leaflet-container a.leaflet-popup-close-button {
+            padding: 12px 12px 0 0;
+        }*/
+
+        .popup-bottom {
+            background-color: #F7F7F7;
+            margin-left: -20px;
+            margin-right: -20;
+            padding: 20px 20px 5px;
         }
 
     </style>
@@ -128,11 +147,11 @@
 <div id="map"></div>
 
 <script>
-  var map = L.map('map', {
-    maxZoom: 16
+    var map = L.map('map', {
+        maxZoom: 16
     }).setView([40, -43], 2);
 
-  var esriPin = L.icon({
+    var esriPin = L.icon({
       iconUrl: './images/blue-cluster-pin.png',
       iconRetinaUrl: './images/blue-cluster-pin.png',
       iconSize: [15, 27],
@@ -140,19 +159,19 @@
       popupAnchor: [0, -11],
     });
 
-  L.esri.basemapLayer('Gray').addTo(map);
-  L.esri.clusteredFeatureLayer('https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0', {
+    L.esri.basemapLayer('Gray').addTo(map);
+    L.esri.clusteredFeatureLayer('https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0', {
         spiderfyOnMaxZoom: true,
         // disableClusteringAtZoom: 15, //16
         showCoverageOnHover: false,
-        maxClusterRadius: 80,
+        maxClusterRadius: 55,
         pointToLayer: function (geojson, latlng) {
             return L.marker(latlng, {
                 icon: esriPin
             });
         },
         onEachFeature: function (geojson, marker) {
-                marker.bindPopup("<h3>" + geojson.properties.EventName + "</h3><p>" + geojson.properties.Descriptio + "</p>" + geojson.properties.EventType + " " + geojson.properties.PrimaryAud + "</div><p>HOST: <a target='_blank' href='" + geojson.properties.Url + "'>" + geojson.properties.Organizati + "</a></p><p>CONTACT: <a target='_top' href='mailto://" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Name + "</a></p>");
+                marker.bindPopup("<h3>" + geojson.properties.EventName + "</h3><p>" + geojson.properties.Descriptio + "<br>" + geojson.properties.EventType + " " + geojson.properties.PrimaryAud + "</p></div><div class='popup-bottom'<p>HOST: <a target='_blank' href='" + geojson.properties.Url + "'>" + geojson.properties.Organizati + "</a></p><p>CONTACT: <a target='_top' href='mailto://" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Name + "</a></p></div>");
                 marker.properties = {};
                 marker.properties.EventName = geojson.properties.EventName;
                 marker.properties.Descriptio = geojson.properties.Descriptio;
