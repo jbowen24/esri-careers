@@ -128,7 +128,9 @@
 <div id="map"></div>
 
 <script>
-  var map = L.map('map').setView([40, -43], 2);
+  var map = L.map('map', {
+    maxZoom: 16
+    }).setView([40, -43], 2);
 
   var esriPin = L.icon({
       iconUrl: './images/blue-cluster-pin.png',
@@ -140,8 +142,8 @@
 
   L.esri.basemapLayer('Gray').addTo(map);
   L.esri.clusteredFeatureLayer('https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0', {
-        spiderfyOnMaxZoom:false,
-        disableClusteringAtZoom: 16, //16
+        spiderfyOnMaxZoom: true,
+        // disableClusteringAtZoom: 15, //16
         showCoverageOnHover: false,
         maxClusterRadius: 80,
         pointToLayer: function (geojson, latlng) {
