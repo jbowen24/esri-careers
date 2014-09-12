@@ -20,13 +20,11 @@
         #map {position: absolute;top:0;bottom:0;right:0;left:0;}
 
         /* Clusters */
-
-        .my-cluster {
+        .cluster {
             color: #fff;
         }
-
         /* Small */
-        .my-cluster-small {
+        .cluster-small {
             background-color: rgba(140,177,210,0.4); 
             margin-left: -20px;
             margin-top: -20px;
@@ -34,7 +32,7 @@
             height: 40px;  
             border-radius: 20px;         
         }
-        .my-cluster-small > div {
+        .cluster-small > div {
             background-color: rgba(140,177,210,0.5);
             width: 24px;
             height: 24px;
@@ -43,12 +41,11 @@
             text-align: center;
             border-radius: 24px;
         }
-        .my-cluster-small > div > span {
+        .cluster-small > div > span {
             line-height: 24px;
         }
-
         /* Medium */
-        .my-cluster-medium {
+        .cluster-medium {
             background-color: rgba(97,147,179,0.4);
             margin-left: -30px;
             margin-top: -30px;
@@ -56,7 +53,7 @@
             height: 60px;  
             border-radius: 30px;         
         }
-        .my-cluster-medium > div {
+        .cluster-medium > div {
             background-color: rgba(97,147,179,0.5);
             width: 44px;
             height: 44px;
@@ -65,12 +62,11 @@
             text-align: center;
             border-radius: 22px;
         }
-        .my-cluster-medium > div > span {
+        .cluster-medium > div > span {
             line-height: 44px;
         }
-
         /* Large */
-        .my-cluster-large {
+        .cluster-large {
             background-color: rgba(59,110,128,0.4);
             margin-left: -40px;
             margin-top: -40px;
@@ -78,7 +74,7 @@
             height: 80px;  
             border-radius: 40px;         
         }
-        .my-cluster-large > div {
+        .cluster-large > div {
             background-color: rgba(59,110,128,0.5);
             width: 60px;
             height: 60px;
@@ -87,12 +83,11 @@
             text-align: center;
             border-radius: 30px;
         }
-        .my-cluster-large > div > span {
+        .cluster-large > div > span {
             line-height: 60px;
         }
-
         /* xLarge */
-        .my-cluster-xlarge {
+        .cluster-xlarge {
             background-color: rgba(20,72,77,0.4);
             margin-left: -60px;
             margin-top: -60px;
@@ -100,7 +95,7 @@
             height: 120px;  
             border-radius: 60px;         
         }
-        .my-cluster-xlarge > div {
+        .cluster-xlarge > div {
             background-color: rgba(20,72,77,0.5);
             width: 100px;
             height: 100px;
@@ -109,29 +104,28 @@
             text-align: center;
             border-radius: 50px;
         }
-        .my-cluster-xlarge > div > span {
+        .cluster-xlarge > div > span {
             line-height: 100px;
         }
 
         /* popup */
-
         .leaflet-popup-pane, .leaflet-control {
             font-family: Avenir;
         }
-
         .leaflet-popup-content-wrapper {
             border-radius: 6px;
         }
-
- /*       .leaflet-container a.leaflet-popup-close-button {
-            padding: 12px 12px 0 0;
-        }*/
-
+        .leaflet-popup-content {
+            width: 250px;
+        }
+        .leaflet-popup-content p {
+            margin: 0 0 6px;
+        }
         .popup-bottom {
             background-color: #F7F7F7;
             margin-left: -20px;
             margin-right: -20;
-            padding: 20px 20px 5px;
+            padding: 10px 20px 5px;
         }
 
     </style>
@@ -147,11 +141,17 @@
 <div id="map"></div>
 
 <script>
-    var map = L.map('map', {
+    var map,
+        clusterLayer,
+        esriPin;
+
+    map = L.map('map', {
         maxZoom: 16
     }).setView([40, -43], 2);
 
-    var esriPin = L.icon({
+    L.esri.basemapLayer('Gray').addTo(map);
+
+    esriPin = L.icon({
       iconUrl: './images/blue-cluster-pin.png',
       iconRetinaUrl: './images/blue-cluster-pin.png',
       iconSize: [15, 27],
@@ -159,29 +159,31 @@
       popupAnchor: [0, -11],
     });
 
-    L.esri.basemapLayer('Gray').addTo(map);
-    L.esri.clusteredFeatureLayer('https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0', {
+    // Create cluster layer
+    clusterLayer = L.esri.clusteredFeatureLayer('https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0', {
         spiderfyOnMaxZoom: true,
         // disableClusteringAtZoom: 15, //16
         showCoverageOnHover: false,
         maxClusterRadius: 55,
+        // single pins
         pointToLayer: function (geojson, latlng) {
             return L.marker(latlng, {
                 icon: esriPin
             });
         },
+        // popups
         onEachFeature: function (geojson, marker) {
-                marker.bindPopup("<h3>" + geojson.properties.EventName + "</h3><p>" + geojson.properties.Descriptio + "<br>" + geojson.properties.EventType + " " + geojson.properties.PrimaryAud + "</p></div><div class='popup-bottom'<p>HOST: <a target='_blank' href='" + geojson.properties.Url + "'>" + geojson.properties.Organizati + "</a></p><p>CONTACT: <a target='_top' href='mailto://" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Name + "</a></p></div>");
-                marker.properties = {};
-                marker.properties.EventName = geojson.properties.EventName;
-                marker.properties.Descriptio = geojson.properties.Descriptio;
-        }
-        ,
+            marker.bindPopup("<h3>" + geojson.properties.EventName + "</h3><p>" + geojson.properties.Descriptio + "<br>" + geojson.properties.EventType + " " + geojson.properties.PrimaryAud + "</p></div><div class='popup-bottom'><p>HOST: <a target='_blank' href='" + geojson.properties.Url + "'>" + geojson.properties.Organizati + "</a></p><p>CONTACT: <a target='_top' href='mailto://" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Name + "</a></p></div>");
+            // store data
+            marker.properties = {};
+            marker.properties.EventName = geojson.properties.EventName;
+        },
+        // cluster styles
         iconCreateFunction: function (cluster) {
-            var count = cluster.getChildCount();
-            var digits = (count + '').length;
-
-            var clusterSize;
+            var count = cluster.getChildCount(),
+                digits = (count + '').length,
+                clusterSize;
+            // Get cluster count
             if (count > 1 && count <= 5)
                 clusterSize = "small"; 
             else if (count > 5 && count <= 20) 
@@ -190,14 +192,19 @@
                 clusterSize = "large"; 
             else
                 clusterSize = "xlarge";
-
+            // Create cluster
             return new L.DivIcon({
                 html: "<div><span>"+count+"</span></div>",
-                className:"my-cluster my-cluster-"+clusterSize,
+                className:"cluster cluster-"+clusterSize,
                 iconSize: null
             });
           }
         }).addTo(map);
+
+        // Auto-show popup - pretty annoying 
+        // clusterLayer.on('mouseover', function (e) {
+        //     e.layer.openPopup();
+        // });
 </script>
 
 </body>
