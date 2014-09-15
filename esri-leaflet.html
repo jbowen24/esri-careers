@@ -166,6 +166,9 @@
         .popup-bottom p {
           margin: .5em 0;
         }
+       .leaflet-popup-tip {
+            background: #F7F7F7;
+        }
         .marker {
             background-color: rgba(140,177,210,0.4);
             margin-left: -16px;
@@ -222,7 +225,7 @@
     map = L.map('map', {
         maxZoom: 16,
 
-    }).setView([18.64,-27.77], 1);
+    }).setView([18.64,-27.77], 3);
 
     L.esri.basemapLayer('Gray').addTo(map);
     L.esri.basemapLayer('GrayLabels').addTo(map);
