@@ -280,10 +280,10 @@
           }
         }).addTo(map);
 
-        // Auto-show popup - pretty annoying
-        // clusterLayer.on('mouseover', function (e) {
-        //   e.layer.openPopup();
-        // });
+        // Auto-show popup - enabled upon request
+        clusterLayer.on('mouseover', function (e) {
+          e.layer.openPopup();
+        });
 
         L.control.locate({
           follow: false,
@@ -295,7 +295,7 @@
         }).addTo(map);
 
         var searchControl = new L.esri.Controls.Geosearch({
-          useMapBounds: 12,
+          useMapBounds: false,
           providers: [
             new L.esri.Controls.Geosearch.Providers.FeatureLayer('https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0', {
               searchFields: ['EventName', 'Organizati'],
