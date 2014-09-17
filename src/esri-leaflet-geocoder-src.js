@@ -219,7 +219,10 @@ L.esri.Controls.Geosearch = L.Control.extend({
     var callback = L.Util.bind(function(error, results){
       activeRequests--;
 
-      if(results){
+      // Single selection from suggestions
+      if(results && key){
+        allResults = allResults.concat(results[0]);
+      } else {
         allResults = allResults.concat(results);
       }
 
