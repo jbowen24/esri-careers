@@ -311,7 +311,11 @@ L.esri.Controls.Geosearch = L.Control.extend({
         currentGroup = suggestion.provider.options.label;
       }
       var list = L.DomUtil.create('ul', "geocoder-control-list", this._suggestions);
-      var suggestionItem = L.DomUtil.create('li', 'geocoder-control-suggestion', list);
+      var css = 'geocoder-control-suggestion';
+      if (i === 0 ) {
+          css = css + ' geocoder-control-selected';
+      }
+      var suggestionItem = L.DomUtil.create('li', css, list);
       suggestionItem.innerHTML = suggestion.text;
       suggestionItem.provider = suggestion.provider;
       suggestionItem["data-magic-key"] = suggestion.magicKey;
