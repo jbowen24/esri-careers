@@ -171,11 +171,11 @@
         }
         .marker {
             /*background-color: rgba(140,177,210,0.4);*/
-            margin-left: -13px;
-            margin-top: -13px;
-            width: 26px;
-            height: 26px;
-            border-radius: 14px;
+            margin-left: -15px;
+            margin-top: -15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
         }
         .marker path, .marker circle {
           fill: rgba(255, 255, 255, 0.9);
@@ -184,20 +184,19 @@
           /*background-color: rgba(140,177,210,1);*/
           /*background-color: #6d93a0;*/
           background-color: rgba(59,110,128,0.7);
-          width: 12px;
-          height: 12px;
-          margin-left: 4px;
-          margin-top: 4px;
+          width: 14px;
+          height: 14px;
+          margin-left: 5px;
+          margin-top: 5px;
           padding: 3px;
           text-align: center;
-          border-radius: 10px;
+          border-radius: 14px;
         }
         .marker:hover {
-          /*background-color: rgba(140,177,210,0.7);*/
-          background-color: rgba(59,110,128,0.6);
+          background-color: rgba(140,177,210,0.7);
         }
         .marker:hover > div {
-          background-color: rgba(140,177,210,0);
+          /*background-color: rgba(140,177,210,1);*/
         }
     </style>
 
@@ -235,7 +234,7 @@
 
     esriPin = L.divIcon({
       // html: '<div><svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 95.105"><path d="M50 0l11.803 36.327H100l-30.902 22.45 11.804 36.328L50 72.655l-30.902 22.45 11.804-36.327L0 36.328h38.197z"/></svg></div>',
-       html: '<div><svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 95.105"><circle cx="50" cy="50" r="40"/></svg></div>',
+       html: '<div><svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg></div>',
       className: 'marker',
       iconSize: null,
       popupAnchor: [0, -11]
@@ -289,6 +288,13 @@
           e.layer.openPopup();
         });
 
+        // Zoom in to single feature, always show popup
+        clusterLayer.on('click', function (e) {
+            map.setZoomAround(e.latlng, map.getZoom() + 1);
+            e.layer.openPopup();
+        });
+
+        // Add geolocation control
         L.control.locate({
           follow: false,
           icon: 'icon-location',
@@ -298,6 +304,7 @@
           }
         }).addTo(map);
 
+        // Add search control to search world places as well as gis-day feature service
         var searchControl = new L.esri.Controls.Geosearch({
           useMapBounds: false,
           providers: [
@@ -312,6 +319,7 @@
           ]
         }).addTo(map);
 
+        // Show feature and popup when selected 
         searchControl.on("results", function(data){
           if(data.results && data.results[0].FID){
             clusterLayer.once('load', function(){
