@@ -150,7 +150,8 @@
             geocoder,
             infoTemplate,
             defaultSym,
-            selectedSym;
+            selectedSym,
+            activeClusterElement;
 
         // Create map
         map = new Map("mapDiv", {
@@ -294,19 +295,41 @@
             }
         }
 
+       // Highlight clusters
+        function setActiveClusterOpacity(opacity) {
+            if (activeClusterElement) {
+                activeClusterElement.setAttribute("fill-opacity", opacity);
+                activeClusterElement.setAttribute("stroke-opacity", opacity);
+            }
+        }
+
         // Show popups on hover - probably can be optimized
         function onMouseOverCluster(e) {
             if (e.graphic.attributes.clusterCount === 1) {
                 e.graphic._graphicsLayer.onClick(e);
+            } else {
+                // circle
+                if (e.target.nodeName === "circle") {
+                    map.infoWindow.hide();
+                    activeClusterElement = e.target;
+                    setActiveClusterOpacity(1);
+                // text
+                } else {
+                    // re-activate cluster
+                    setActiveClusterOpacity(1);
+                }
             }
         }
 
-        // function onMouseOutCluster (e) {
-        //     if (map.infoWindow._lastSelected !== null) {
-        //         removeSelectedFeature();
-        //         map.infoWindow.hide();
-        //     }
-        // }
+        function onMouseOutCluster(e) {
+            // reset opacity
+            if (e.graphic.attributes.clusterCount > 1) {
+                // circle
+                if (e.target.nodeName === "circle") {
+                    setActiveClusterOpacity(0.75);
+                }
+            }
+        }
 
         // Hide popup if selected feature is clustered
         function onClustersShown(clusters) {
@@ -329,7 +352,7 @@
         function addClusterLayerEvents() {
             // Mouse over events
             clusterLayer.on("mouse-over", onMouseOverCluster);
-            //clusterLayer.on("mouse-out", onMouseOutCluster);
+            clusterLayer.on("mouse-out", onMouseOutCluster);
             // Clusters drawn
             clusterLayer.on("clusters-shown", onClustersShown);
         }
