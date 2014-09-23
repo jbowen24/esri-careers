@@ -143,7 +143,7 @@
             line-height: 100px;
         }
 
-        /* popup */
+        /* Popup */
         .leaflet-popup-pane h3 {
           font-family:'Avenir LT W01 65 Medium';
         }
@@ -170,7 +170,6 @@
             background: #F7F7F7;
         }
         .marker {
-            /*background-color: rgba(140,177,210,0.4);*/
             margin-left: -15px;
             margin-top: -15px;
             width: 30px;
@@ -181,8 +180,6 @@
           fill: rgba(255, 255, 255, 0.9);
         }
         .marker > div {
-          /*background-color: rgba(140,177,210,1);*/
-          /*background-color: #6d93a0;*/
           background-color: rgba(59,110,128,0.7);
           width: 14px;
           height: 14px;
@@ -195,9 +192,9 @@
         .marker:hover {
           background-color: rgba(140,177,210,0.7);
         }
-        .marker:hover > div {
-          /*background-color: rgba(140,177,210,1);*/
-        }
+        /* .marker:hover > div {
+          background-color: rgba(140,177,210,1);
+        }*/
     </style>
 
 </head>
@@ -233,7 +230,6 @@
     L.esri.basemapLayer('GrayLabels').addTo(map);
 
     esriPin = L.divIcon({
-      // html: '<div><svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 95.105"><path d="M50 0l11.803 36.327H100l-30.902 22.45 11.804 36.328L50 72.655l-30.902 22.45 11.804-36.327L0 36.328h38.197z"/></svg></div>',
        html: '<div><svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg></div>',
       className: 'marker',
       iconSize: null,
@@ -246,14 +242,14 @@
         showCoverageOnHover: false,
         maxClusterRadius: 55,
 
-        // single pins
+        // Single pins
         pointToLayer: function (geojson, latlng) {
           return L.marker(latlng, {
             icon: esriPin
           });
         },
 
-        // popups
+        // Popups
         onEachFeature: function (geojson, marker) {
             marker.bindPopup("<h2>" + geojson.properties.EventName + "</h2><p>" + geojson.properties.Descriptio + "<br>" + geojson.properties.EventType + " " + geojson.properties.PrimaryAud + "</p></div><div class='popup-bottom'><p>Host: <a target='_blank' href='" + geojson.properties.Url + "'>" + geojson.properties.Organizati + "</a></p><p>Contact: <a target='_top' href='mailto://" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Name + "</a></p></div>");
             // store data
@@ -261,7 +257,7 @@
             marker.properties.EventName = geojson.properties.EventName;
         },
 
-        // cluster styles
+        // Cluster styles
         iconCreateFunction: function (cluster) {
             var count = cluster.getChildCount(),
                 clusterSize;
@@ -283,15 +279,23 @@
           }
         }).addTo(map);
 
+        
         // Auto-show popup - enabled upon request
         clusterLayer.on('mouseover', function (e) {
-          e.layer.openPopup();
+            e.layer.openPopup();
         });
 
         // Zoom in to single feature, always show popup
         clusterLayer.on('click', function (e) {
-            map.setZoomAround(e.latlng, map.getZoom() + 1);
             e.layer.openPopup();
+        });
+
+        clusterLayer.on('mousedown', function (e) {
+            e.layer.openPopup();
+        });        
+
+        clusterLayer.on('dblclick', function(e) {
+            map.setZoomAround(e.latlng, map.getZoom() + 1);
         });
 
         // Add geolocation control
