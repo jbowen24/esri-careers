@@ -222,9 +222,9 @@
         esriPin;
 
     map = L.map('map', {
-        maxZoom: 18,
+        maxZoom: 16,
 
-    }).setView([30,-35], 3);
+    }).setView([15,-35], 2);
 
     L.esri.basemapLayer('Gray').addTo(map);
     L.esri.basemapLayer('GrayLabels').addTo(map);
@@ -291,11 +291,18 @@
         });
 
         clusterLayer.on('mousedown', function (e) {
-            e.layer.openPopup();
-        });        
+            e.layer.openPopup();     
+        }); 
 
         clusterLayer.on('dblclick', function(e) {
             map.setZoomAround(e.latlng, map.getZoom() + 1);
+        });
+
+        // Prevent toggling popup (flicker)
+        map.on('mouseup', function(e) {
+            if (e.target._popup) {
+                e.target._popup._isOpen = false;
+            }
         });
 
         // Add geolocation control
