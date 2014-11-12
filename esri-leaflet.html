@@ -44,7 +44,8 @@
           background-color: rgba(140,177,210,0);
         }
         .cluster-small > div {
-            background-color: rgba(140,177,210,0.5);
+            /*background-color: rgba(140,177,210,0.5);*/
+            background-color: rgba(140,177,210,0.85);
             width: 24px;
             height: 24px;
             margin-left: 8px;
@@ -66,7 +67,8 @@
             border-radius: 30px;
         }
         .cluster-medium > div {
-            background-color: rgba(97,147,179,0.5);
+            /*background-color: rgba(97,147,179,0.5);*/
+            background-color: rgba(97,147,179,0.85);
             width: 44px;
             height: 44px;
             margin-left: 8px;
@@ -94,7 +96,8 @@
             border-radius: 40px;
         }
         .cluster-large > div {
-            background-color: rgba(59,110,128,0.5);
+            /*background-color: rgba(59,110,128,0.5);*/
+            background-color: rgba(59,110,128,0.85);
             width: 60px;
             height: 60px;
             margin-left: 10px;
@@ -131,7 +134,8 @@
           background-color: rgba(20,72,77,0);
         }
         .cluster-xlarge > div {
-            background-color: rgba(20,72,77,0.5);
+            /*background-color: rgba(20,72,77,0.5);*/
+            background-color: rgba(20,72,77,0.85);
             width: 100px;
             height: 100px;
             margin-left: 10px;
@@ -251,7 +255,7 @@
 
         // Popups
         onEachFeature: function (geojson, marker) {
-            marker.bindPopup("<h2>" + geojson.properties.EventName + "</h2><p>" + geojson.properties.Descriptio + "<br>" + geojson.properties.EventType + " " + geojson.properties.PrimaryAud + "</p></div><div class='popup-bottom'><p>Host: <a target='_blank' href='" + geojson.properties.Url + "'>" + geojson.properties.Organizati + "</a></p><p>Contact: <a target='_top' href='mailto://" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Name + "</a></p></div>");
+            marker.bindPopup("<h2><a target='_blank' href='" + geojson.properties.Url + "'>" + geojson.properties.EventName + "</a></h2><p>" + geojson.properties.Descriptio + "<br>" + geojson.properties.EventType + " " + geojson.properties.PrimaryAud + "</p></div><div class='popup-bottom'><p>DATE: " + new Date(geojson.properties.eventdatet).toDateString() + "</p><p>HOST: " + geojson.properties.Organizati + "</p></div>");
             // store data
             marker.properties = {};
             marker.properties.EventName = geojson.properties.EventName;
