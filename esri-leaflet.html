@@ -255,7 +255,8 @@
 
         // Popups
         onEachFeature: function (geojson, marker) {
-            marker.bindPopup("<h2><a target='_blank' href='" + geojson.properties.Url + "'>" + geojson.properties.EventName + "</a></h2><p>" + geojson.properties.Descriptio + "<br>" + geojson.properties.EventType + " " + geojson.properties.PrimaryAud + "</p></div><div class='popup-bottom'><p>DATE: " + new Date(geojson.properties.eventdatet).toDateString() + "</p><p>HOST: " + geojson.properties.Organizati + "</p></div>");
+            var url = geojson.properties.Url.trim() ? "<a target='_blank' href='" + geojson.properties.Url.toString() + "'>" + geojson.properties.EventName + "</a>" : geojson.properties.EventName;
+            marker.bindPopup("<h2>" + url + "</h2><p>" + geojson.properties.Descriptio + "<br>" + geojson.properties.EventType + " " + geojson.properties.PrimaryAud + "</p></div><div class='popup-bottom'><p>DATE: " + new Date(geojson.properties.eventdatet).toDateString() + "</p><p>HOST: <a target='_top' href='mailto:" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Organizati + "</a></p></div>");
             // store data
             marker.properties = {};
             marker.properties.EventName = geojson.properties.EventName;
