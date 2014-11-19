@@ -248,7 +248,7 @@
 </head>
 
 <body>
-    <!-- <a href="https://github.com/esri/gis-day-map"><img style="position: absolute; top: 0; right: 0; border: 0; width: 125px; z-index:100;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a> -->
+    <a href="https://github.com/esri/gis-day-map"><img style="position: absolute; top: 0; right: 0; border: 0; width: 125px; z-index:100;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
     
     <div id="map"></div>
 
@@ -270,7 +270,7 @@
         });
 
         // Create cluster layer from GIS Day data in AGOL
-        clusterLayer = L.esri.clusteredFeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day_Final/FeatureServer/0', 
+        clusterLayer = L.esri.clusteredFeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0', 
         {
             spiderfyOnMaxZoom: true,
             showCoverageOnHover: false,
@@ -285,7 +285,7 @@
 
             // Format popups
             onEachFeature: function (geojson, marker) {
-                var url = geojson.properties.URL.trim() ? "<a target='_blank' href='" + geojson.properties.URL.toString() + "'>" + geojson.properties.Name + "</a>" : geojson.properties.Name,
+                var url = geojson.properties.URL ? "<a target='_blank' href='" + geojson.properties.URL.toString() + "'>" + geojson.properties.Name + "</a>" : geojson.properties.Name,
                     desc =  geojson.properties.Description,
                     dateTime = new Date(geojson.properties.DateTime),
                     min = dateTime.getMinutes() ? dateTime.getMinutes() : "00",
@@ -363,7 +363,7 @@
           placeholder: "Search for event name, host or location",
           useMapBounds: false,
           providers: [
-                new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day_Final/FeatureServer/0', {
+                new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0', {
               searchFields: ['Name', 'Organization'],
               label: 'GIS Day Events',
               bufferRadius: 5000,
