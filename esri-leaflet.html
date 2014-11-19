@@ -26,7 +26,7 @@
     <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/1.0.0-rc.2/esri-leaflet-geocoder.js"></script>
     <link rel="stylesheet" type="text/css" href="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/1.0.0-rc.2/esri-leaflet-geocoder.css">
   
-    <!-- More map controls -->
+    <!-- More controls -->
     <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.css' rel='stylesheet' />
     
@@ -174,14 +174,20 @@
         }
         .leaflet-popup-content p {
             margin: 1em 0;
+            max-height: 150px;
+            overflow-y: scroll;
         }
+        .leaflet-popup-content h2 {
+            margin-top: 15px;
+        }
+
         .popup-bottom {
             background: #f2f2f2;
             margin: 1em -20px -1em;
             padding: .5em 20px;
         }
         .popup-bottom p {
-          margin: .5em 0;
+            margin: .5em 0;
         }
 
         .popup-host {
@@ -195,6 +201,7 @@
        .leaflet-popup-tip {
             background: #f2f2f2;
         }
+
         .marker {
             margin-left: -15px;
             margin-top: -15px;
@@ -222,6 +229,7 @@
           background-color: rgba(140,177,210,1);
         }*/
 
+        /* Esri Geocode control */
         .geocoder-control-header {
             font-size: 11px;
             letter-spacing: 0.0725em;
@@ -237,142 +245,144 @@
             width: 295px;
         }
     </style>
-
 </head>
+
 <body>
+    <a href="https://github.com/esri/gis-day-map"><img style="position: absolute; top: 0; right: 0; border: 0; width: 125px; z-index:100;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+    
+    <div id="map"></div>
 
-<div id="map"></div>
+    <script>
+        var map,
+            clusterLayer,
+            singlePin;
 
-<script>
-    var map,
-        clusterLayer,
-        singlePin;
+        map = L.map('map', { maxZoom: 16 }).setView([15, -35], 2);
 
-    map = L.map('map', { maxZoom: 16 }).setView([15, -35], 2);
+        // Use Esri Streets or GrayLables
+        L.esri.basemapLayer('Streets').addTo(map);
 
-    // Use Esri Streets or GrayLables
-    L.esri.basemapLayer('Streets').addTo(map);
-
-    singlePin = L.divIcon({
-        html: '<div><svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg></div>',
-        className: 'marker',
-        iconSize: null,
-        popupAnchor: [0, -11]
-    });
-
-    // Create cluster layer from GIS Day data in AGOL
-    clusterLayer = L.esri.clusteredFeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day_Final/FeatureServer/0', 
-    {
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false,
-        maxClusterRadius: 55,
-
-        // Single pins
-        pointToLayer: function (geojson, latlng) {
-            return L.marker(latlng, {
-                icon: singlePin
-            });
-        },
-
-        // Format popups
-        onEachFeature: function (geojson, marker) {
-            var url = geojson.properties.URL.trim() ? "<a target='_blank' href='" + geojson.properties.URL.toString() + "'>" + geojson.properties.Name + "</a>" : geojson.properties.Name,
-                dateTime = new Date(geojson.properties.DateTime),
-                min = dateTime.getMinutes() ? dateTime.getMinutes() : "00",
-                hr = dateTime.getUTCHours(),
-                ampm = hr < 12 ? "AM" : "PM";
-            hr = hr > 12 ? hr - 12 : hr;
-            dateTime = dateTime.toDateString() + ", " + hr + ":" + min + " " + ampm;
-            marker.bindPopup("<h2>" + url + "</h2><p>" + geojson.properties.Description + "<br>" + geojson.properties.Type + " " + geojson.properties.Audience + "</p></div><div class='popup-bottom'><p>DATE: " + dateTime + "</p><p>ADDRESS: " + geojson.properties.Address + "</p><div class='popup-host'><p>HOST: <a target='_top' href='mailto:" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Organization + "</a></p></div></div>");
-            // store data
-            marker.properties = {};
-            marker.properties.Name = geojson.properties.Name;
-        },
-
-        // Cluster styles
-        iconCreateFunction: function (cluster) {
-            var count = cluster.getChildCount(),
-                clusterSize;
-            // Get cluster count
-            if (count > 1 && count <= 5)
-                clusterSize = "small";
-            else if (count > 5 && count <= 20)
-                clusterSize = "medium";
-            else if (count > 20 && count <= 50)
-                clusterSize = "large";
-            else
-                clusterSize = "xlarge";
-            // Create cluster
-            return new L.DivIcon({
-                html: "<div><span>"+count+"</span></div>",
-                className:"cluster cluster-"+clusterSize,
-                iconSize: null
-            });
-        }
-    }).addTo(map);
-
-    // Auto-show popup
-    clusterLayer.on('mouseover', function (e) {
-        e.layer.openPopup();
-    });
-
-    // Zoom in to single feature, always show popup
-    clusterLayer.on('click', function (e) {
-        e.layer.openPopup();
-    });
-
-    // Show popup
-    clusterLayer.on('mousedown', function (e) {
-        e.layer.openPopup();     
-    }); 
-
-    // Zoom
-    clusterLayer.on('dblclick', function(e) {
-        map.setZoomAround(e.latlng, map.getZoom() + 1);
-    });
-
-    // Prevent toggling/flickering effect of popup
-    map.on('mouseup', function(e) {
-        if (e.target._popup) {
-            e.target._popup._isOpen = false;
-        }
-    });
-
-    // Add geolocation control
-    L.control.locate({
-      follow: false,
-      icon: 'icon-location',
-      showPopup: false,
-       locateOptions: {
-         maxZoom: 13
-      }
-    }).addTo(map);
-
-    // Add search control to search world places as well as GIS Day feature service
-    var searchControl = new L.esri.Geocoding.Controls.Geosearch({
-      placeholder: "Search for event, host name or location",
-      useMapBounds: false,
-      providers: [
-            new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day_Final/FeatureServer/0', {
-          searchFields: ['Name', 'Organization'],
-          label: 'GIS Day Events',
-          bufferRadius: 5000,
-          formatSuggestion: function(feature){
-            return feature.properties.Name + ' - ' + feature.properties.Organization;
-          }
-        })
-      ]
-    }).addTo(map);
-
-    // Show feature and popup when selected 
-    searchControl.on("results", function(data){
-       if(data.results && data.results[0].properties.FID){
-        clusterLayer.once('load', function(){
-          clusterLayer.getFeature(data.results[0].properties.FID).openPopup();
+        singlePin = L.divIcon({
+            html: '<div><svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg></div>',
+            className: 'marker',
+            iconSize: null,
+            popupAnchor: [0, -11]
         });
-      }
-    });
-</script>
+
+        // Create cluster layer from GIS Day data in AGOL
+        clusterLayer = L.esri.clusteredFeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0', 
+        {
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            maxClusterRadius: 55,
+
+            // Single pins
+            pointToLayer: function (geojson, latlng) {
+                return L.marker(latlng, {
+                    icon: singlePin
+                });
+            },
+
+            // Format popups
+            onEachFeature: function (geojson, marker) {
+                var url = geojson.properties.URL ? "<a target='_blank' href='" + geojson.properties.URL.toString() + "'>" + geojson.properties.Name + "</a>" : geojson.properties.Name,
+                    desc =  geojson.properties.Description,
+                    dateTime = new Date(geojson.properties.DateTime),
+                    min = dateTime.getMinutes() ? dateTime.getMinutes() : "00",
+                    hr = dateTime.getUTCHours(),
+                    ampm = hr < 12 ? "AM" : "PM";
+                hr = hr > 12 ? hr - 12 : hr;
+                dateTime = dateTime.toDateString() + ", " + hr + ":" + min + " " + ampm;
+                marker.bindPopup("<h2>" + url + "</h2><p>" +  desc + "<br>" + geojson.properties.Type + " " + geojson.properties.Audience + "</p></div><div class='popup-bottom'><p>DATE: " + dateTime + "</p><p>ADDRESS: " + geojson.properties.Address + "</p><div class='popup-host'><p>HOST: <a target='_top' href='mailto:" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Organization + "</a></p></div></div>");
+                // store data
+                marker.properties = {};
+                marker.properties.Name = geojson.properties.Name;
+            },
+
+            // Cluster styles
+            iconCreateFunction: function (cluster) {
+                var count = cluster.getChildCount(),
+                    clusterSize;
+                // Get cluster count
+                if (count > 1 && count <= 5)
+                    clusterSize = "small";
+                else if (count > 5 && count <= 20)
+                    clusterSize = "medium";
+                else if (count > 20 && count <= 50)
+                    clusterSize = "large";
+                else
+                    clusterSize = "xlarge";
+                // Create cluster
+                return new L.DivIcon({
+                    html: "<div><span>"+count+"</span></div>",
+                    className:"cluster cluster-"+clusterSize,
+                    iconSize: null
+                });
+            }
+        }).addTo(map);
+
+        // Auto-show popup
+        clusterLayer.on('mouseover', function (e) {
+            e.layer.openPopup();
+        });
+
+        // Zoom in to single feature, always show popup
+        clusterLayer.on('click', function (e) {
+            e.layer.openPopup();
+        });
+
+        // Show popup
+        clusterLayer.on('mousedown', function (e) {
+            e.layer.openPopup();     
+        }); 
+
+        // Zoom
+        clusterLayer.on('dblclick', function(e) {
+            map.setZoomAround(e.latlng, map.getZoom() + 1);
+        });
+
+        // Prevent toggling/flickering effect of popup
+        map.on('mouseup', function(e) {
+            if (e.target._popup) {
+                e.target._popup._isOpen = false;
+            }
+        });
+
+        // Add geolocation control
+        L.control.locate({
+          follow: false,
+          icon: 'icon-location',
+          showPopup: false,
+           locateOptions: {
+             maxZoom: 13
+          }
+        }).addTo(map);
+
+        // Add search control to search world places as well as GIS Day feature service
+        var searchControl = new L.esri.Geocoding.Controls.Geosearch({
+          placeholder: "Search for event name, host or location",
+          useMapBounds: false,
+          providers: [
+                new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0', {
+              searchFields: ['Name', 'Organization'],
+              label: 'GIS Day Events',
+              bufferRadius: 5000,
+              formatSuggestion: function(feature){
+                return feature.properties.Name + ' - ' + feature.properties.Organization;
+              }
+            })
+          ]
+        }).addTo(map);
+
+        // Show feature and popup when selected 
+        searchControl.on("results", function(data){
+           if(data.results && data.results[0].properties.FID){
+            clusterLayer.once('load', function(){
+              clusterLayer.getFeature(data.results[0].properties.FID).openPopup();
+            });
+          }
+        });
+    </script>
 
 </body>
 </html>
