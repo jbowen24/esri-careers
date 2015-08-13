@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta charset=utf-8 />
-    <title>GIS Day Esri-Leaflet</title>
+    <title>Esri Careers</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
     <!-- Load Leaflet from CDN-->
@@ -46,8 +46,8 @@
         }
         /* Small */
         .cluster-small {
-            box-shadow: 0 0 4px rgba(255,255,255,0.15);
-            background-color: rgba(140,177,210,0.4);
+            box-shadow: 0 0 4px rgba(145,130,189,1);
+            background-color: rgba(145,130,189,.5);
             margin-left: -20px;
             margin-top: -20px;
             width: 40px;
@@ -55,13 +55,13 @@
             border-radius: 20px;
         }
         .cluster-small:hover {
-          background-color: rgba(140,177,210,0.7);
+          background-color: rgba(145,130,189,.7);
         }
         .cluster-small:hover > div {
-          background-color: rgba(140,177,210,0);
+          background-color: rgba(145,130,189,0);
         }
         .cluster-small > div {
-            background-color: rgba(140,177,210,0.85);
+            background-color: rgba(145,130,189,0.85);
             width: 24px;
             height: 24px;
             margin-left: 8px;
@@ -74,8 +74,8 @@
         }
         /* Medium */
         .cluster-medium {
-            box-shadow: 0 0 6px rgba(255,255,255,0.15);
-            background-color: rgba(97,147,179,0.4);
+            box-shadow: 0 0 6px rgba(145,130,189,0.15);
+            background-color: rgba(145,130,189,0.4);
             margin-left: -30px;
             margin-top: -30px;
             width: 60px;
@@ -83,7 +83,7 @@
             border-radius: 30px;
         }
         .cluster-medium > div {
-            background-color: rgba(97,147,179,0.85);
+            background-color: rgba(145,130,189,0.85);
             width: 44px;
             height: 44px;
             margin-left: 8px;
@@ -95,15 +95,15 @@
             line-height: 44px;
         }
         .cluster-medium:hover {
-          background-color: rgba(97,147,179,0.7);
+          background-color: rgba(145,130,189,0.7);
         }
         .cluster-medium:hover > div {
-          background-color: rgba(97,147,179,0);
+          background-color: rgba(145,130,189,0);
         }
         /* Large */
         .cluster-large {
-            box-shadow: 0 0 10px rgba(255,255,255,0.15);
-            background-color: rgba(59,110,128,0.4);
+            box-shadow: 0 0 10px rgba(145,130,189,0.15);
+            background-color: rgba(145,130,189,0.4);
             margin-left: -40px;
             margin-top: -40px;
             width: 80px;
@@ -111,7 +111,7 @@
             border-radius: 40px;
         }
         .cluster-large > div {
-            background-color: rgba(59,110,128,0.85);
+            background-color: rgba(145,130,189,0.85);
             width: 60px;
             height: 60px;
             margin-left: 10px;
@@ -120,21 +120,21 @@
             border-radius: 30px;
         }
         .cluster-large:hover {
-          background-color: rgba(59,110,128,1);
+          background-color: rgba(145,130,189,1);
         }
         .cluster-large:hover {
-          background-color: rgba(59,110,128,0.7);
+          background-color: rgba(145,130,189,0.7);
         }
         .cluster-large:hover > div {
-          background-color: rgba(59,110,128,0);
+          background-color: rgba(145,130,189,0);
         }
         .cluster-large > div > span {
             line-height: 60px;
         }
         /* xLarge */
         .cluster-xlarge {
-            box-shadow: 0 0 16px rgba(255,255,255,0.15);
-            background-color: rgba(20,72,77,0.4);
+            box-shadow: 0 0 16px rgba(145,130,189,0.15);
+            background-color: rgba(145,130,189,0.4);
             margin-left: -60px;
             margin-top: -60px;
             width: 120px;
@@ -142,13 +142,13 @@
             border-radius: 60px;
         }
         .cluster-xlarge:hover {
-          background-color: rgba(20,72,77,0.7);
+          background-color: rgba(145,130,189,0.7);
         }
         .cluster-xlarge:hover > div {
-          background-color: rgba(20,72,77,0);
+          background-color: rgba(145,130,189,0);
         }
         .cluster-xlarge > div {
-            background-color: rgba(20,72,77,0.85);
+            background-color: rgba(145,130,189,0.85);
             width: 100px;
             height: 100px;
             margin-left: 10px;
@@ -210,10 +210,10 @@
             border-radius: 15px;
         }
         .marker path, .marker circle {
-          fill: rgba(255, 255, 255, 0.9);
+          fill: rgba(124, 109, 168, 0.9);
         }
         .marker > div {
-          background-color: rgba(59,110,128,0.7);
+          background-color: rgba(230,226,240,0.85);
           width: 14px;
           height: 14px;
           margin-left: 5px;
@@ -223,7 +223,7 @@
           border-radius: 14px;
         }
         .marker:hover {
-          background-color: rgba(140,177,210,0.7);
+          background-color: rgba(145,130,189,0.7);
         }
         /* .marker:hover > div {
           background-color: rgba(140,177,210,1);
@@ -270,7 +270,7 @@
         });
 
         // Create cluster layer from GIS Day data in AGOL
-        clusterLayer = L.esri.clusteredFeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0', 
+        clusterLayer = L.esri.clusteredFeatureLayer('http://services.arcgis.com/nzS0F0zdNLvs7nc8/arcgis/rest/services/Esri_Offices_International/FeatureServer/0', 
         {
             spiderfyOnMaxZoom: true,
             showCoverageOnHover: false,
@@ -285,15 +285,15 @@
 
             // Format popups
             onEachFeature: function (geojson, marker) {
-                var url = geojson.properties.URL ? "<a target='_blank' href='" + geojson.properties.URL.toString() + "'>" + geojson.properties.Name + "</a>" : geojson.properties.Name,
-                    desc =  geojson.properties.Description,
+                var url = geojson.properties.URL ? "<a target='_blank' href='" + geojson.properties.URL.toString() + "'>" + geojson.properties.NAME + "</a>" : geojson.properties.NAME,
+                    desc =  geojson.properties.ADDRESS_1,
                     dateTime = new Date(geojson.properties.DateTime),
                     min = dateTime.getMinutes() ? dateTime.getMinutes() : "00",
                     hr = dateTime.getUTCHours(),
                     ampm = hr < 12 ? "AM" : "PM";
                 hr = hr > 12 ? hr - 12 : hr;
                 dateTime = dateTime.toDateString() + ", " + hr + ":" + min + " " + ampm;
-                marker.bindPopup("<h2>" + url + "</h2><p>" +  desc + "<br>" + geojson.properties.Type + " " + geojson.properties.Audience + "</p></div><div class='popup-bottom'><p>DATE: " + dateTime + "</p><p>ADDRESS: " + geojson.properties.Address + "</p><div class='popup-host'><p>HOST: <a target='_top' href='mailto:" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Organization + "</a></p></div></div>");
+                marker.bindPopup("<h2>" + url + "</h2><p>" +  desc + "<br>" + geojson.properties.CITY + geojson.properties.COUNTRY + geojson.properties.OFFTYPELBL + " " + geojson.properties.OFFTYPE + "</p></div><div class='popup-bottom'><p>Contact: " + geojson.properties.CONTACT_1 + "</p><p>Email: " + geojson.properties.EMAIL_1 + "</p><div class='popup-host'><p>Website: " + geojson.properties.WEBSITEURL + "</a></p></div></div>");
                 // store data
                 marker.properties = {};
                 marker.properties.Name = geojson.properties.Name;
@@ -360,15 +360,15 @@
 
         // Add search control to search world places as well as GIS Day feature service
         var searchControl = new L.esri.Geocoding.Controls.Geosearch({
-          placeholder: "Search for event name, host or location",
+          placeholder: "Search for an office or location",
           useMapBounds: false,
           providers: [
-                new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0', {
-              searchFields: ['Name', 'Organization'],
-              label: 'GIS Day Events',
+                new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer('http://services.arcgis.com/nzS0F0zdNLvs7nc8/arcgis/rest/services/Esri_Offices_International/FeatureServer/0', {
+              searchFields: ['NAME', 'OFFICENAME', 'CITY', 'COUNTRY'],
+              label: 'Esri Offices',
               bufferRadius: 5000,
               formatSuggestion: function(feature){
-                return feature.properties.Name + ' - ' + feature.properties.Organization;
+                return feature.properties.NAME + ' - ' + feature.properties.OFFICENAME;
               }
             })
           ]
