@@ -46,8 +46,8 @@
         }
         /* Small */
         .cluster-small {
-            box-shadow: 0 0 4px rgba(145,130,189,1);
-            background-color: rgba(145,130,189,.5);
+            box-shadow: 0 0 4px rgba(52,168,147,1);
+            background-color: rgba(52,168,147,.5);
             margin-left: -20px;
             margin-top: -20px;
             width: 40px;
@@ -55,13 +55,13 @@
             border-radius: 20px;
         }
         .cluster-small:hover {
-          background-color: rgba(145,130,189,.7);
+          background-color: rgba(52,168,147,.7);
         }
         .cluster-small:hover > div {
-          background-color: rgba(145,130,189,0);
+          background-color: rgba(52,168,147,0);
         }
         .cluster-small > div {
-            background-color: rgba(145,130,189,0.85);
+            background-color: rgba(52,168,147,0.85);
             width: 24px;
             height: 24px;
             margin-left: 8px;
@@ -74,8 +74,8 @@
         }
         /* Medium */
         .cluster-medium {
-            box-shadow: 0 0 6px rgba(145,130,189,0.15);
-            background-color: rgba(145,130,189,0.4);
+            box-shadow: 0 0 6px rgba(52,168,147,0.15);
+            background-color: rgba(52,168,147,0.4);
             margin-left: -30px;
             margin-top: -30px;
             width: 60px;
@@ -83,7 +83,7 @@
             border-radius: 30px;
         }
         .cluster-medium > div {
-            background-color: rgba(145,130,189,0.85);
+            background-color: rgba(52,168,147,0.85);
             width: 44px;
             height: 44px;
             margin-left: 8px;
@@ -95,15 +95,15 @@
             line-height: 44px;
         }
         .cluster-medium:hover {
-          background-color: rgba(145,130,189,0.7);
+          background-color: rgba(52,168,147,0.7);
         }
         .cluster-medium:hover > div {
-          background-color: rgba(145,130,189,0);
+          background-color: rgba(52,168,147,0);
         }
         /* Large */
         .cluster-large {
-            box-shadow: 0 0 10px rgba(145,130,189,0.15);
-            background-color: rgba(145,130,189,0.4);
+            box-shadow: 0 0 10px rgba(52,168,147,0.15);
+            background-color: rgba(52,168,147,0.4);
             margin-left: -40px;
             margin-top: -40px;
             width: 80px;
@@ -111,7 +111,7 @@
             border-radius: 40px;
         }
         .cluster-large > div {
-            background-color: rgba(145,130,189,0.85);
+            background-color: rgba(52,168,147,0.85);
             width: 60px;
             height: 60px;
             margin-left: 10px;
@@ -120,21 +120,21 @@
             border-radius: 30px;
         }
         .cluster-large:hover {
-          background-color: rgba(145,130,189,1);
+          background-color: rgba(52,168,147,1);
         }
         .cluster-large:hover {
-          background-color: rgba(145,130,189,0.7);
+          background-color: rgba(52,168,147,0.7);
         }
         .cluster-large:hover > div {
-          background-color: rgba(145,130,189,0);
+          background-color: rgba(52,168,147,0);
         }
         .cluster-large > div > span {
             line-height: 60px;
         }
         /* xLarge */
         .cluster-xlarge {
-            box-shadow: 0 0 16px rgba(145,130,189,0.15);
-            background-color: rgba(145,130,189,0.4);
+            box-shadow: 0 0 16px rgba(52,168,147,0.15);
+            background-color: rgba(52,168,147,0.4);
             margin-left: -60px;
             margin-top: -60px;
             width: 120px;
@@ -142,13 +142,13 @@
             border-radius: 60px;
         }
         .cluster-xlarge:hover {
-          background-color: rgba(145,130,189,0.7);
+          background-color: rgba(52,168,147,0.7);
         }
         .cluster-xlarge:hover > div {
-          background-color: rgba(145,130,189,0);
+          background-color: rgba(52,168,147,0);
         }
         .cluster-xlarge > div {
-            background-color: rgba(145,130,189,0.85);
+            background-color: rgba(52,168,147,0.85);
             width: 100px;
             height: 100px;
             margin-left: 10px;
@@ -167,6 +167,7 @@
         .leaflet-popup-content-wrapper {
             border-radius: 6px;
             overflow: hidden;
+            background-color: #34a893;
         }
         .leaflet-popup-content {
             width: 250px;
@@ -174,15 +175,17 @@
         }
         .leaflet-popup-content p {
             margin: 1em 0;
+            color: #fff;
      /*       max-height: 100px;
             overflow-y: scroll;*/
         }
         .leaflet-popup-content h2 {
             margin-top: 15px;
+            color: #fff;
         }
 
         .popup-bottom {
-            background: #f2f2f2;
+            background: #34a893;
             margin: 1em -20px -1em;
             padding: .5em 20px;
         }
@@ -195,13 +198,14 @@
             margin-left: -20px;
             margin-right: -20px;
             padding: 1px 20px;
-            background-color: #d9d9d9;
+            background-color: #288171;
         }
-
        .leaflet-popup-tip {
-            background: #f2f2f2;
+            background: #34a893;
         }
-
+        .leaflet-container a.leaflet-popup-close-button {
+            color: #fff;
+        }
         .marker {
             margin-left: -15px;
             margin-top: -15px;
@@ -209,22 +213,24 @@
             height: 30px;
             border-radius: 15px;
         }
+        .marker:hover {
+          background-color: rgba(226,240,230,.85);
+        }
         .marker path, .marker circle {
-          fill: rgba(124, 109, 168, 0.9);
+          fill: rgba(52,168,147, 0.9);
         }
         .marker > div {
-          background-color: rgba(230,226,240,0.85);
+          background-color: rgba(226,240,230,.85);
           width: 14px;
           height: 14px;
           margin-left: 5px;
           margin-top: 5px;
-          padding: 3px;
+          padding: 2px;
           text-align: center;
           border-radius: 14px;
         }
-        .marker:hover {
-          background-color: rgba(145,130,189,0.7);
-        }
+        
+
         /* .marker:hover > div {
           background-color: rgba(140,177,210,1);
         }*/
@@ -252,15 +258,16 @@
     
     <div id="map"></div>
 
-    <script>
+       <script>
         var map,
             clusterLayer,
             singlePin;
-
         map = L.map('map', { maxZoom: 16 }).setView([15, -35], 2);
-
         // Use Esri Streets or GrayLables
-        L.esri.basemapLayer('Streets').addTo(map);
+        //L.esri.basemapLayer('Gray').addTo(map);
+      L.esri.tiledMapLayer( "http://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer"
+  ).addTo(map);
+
 
         singlePin = L.divIcon({
             html: '<div><svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg></div>',
