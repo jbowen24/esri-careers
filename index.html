@@ -612,6 +612,324 @@
             background: #f2f2f2;
         }
 
+<<<<<<< HEAD
+       // Highlight clusters
+        function setActiveClusterOpacity(opacity) {
+            if (activeClusterElement) {
+                activeClusterElement.setAttribute("fill-opacity", opacity);
+                activeClusterElement.setAttribute("stroke-opacity", opacity);
+            }
+        }
+
+        // Show popups on hover - probably can be optimized
+        function onMouseOverCluster(e) {
+            if (e.graphic.attributes.clusterCount === 1) {
+                e.graphic._graphicsLayer.onClick(e);
+            } else {
+                // circle
+                if (e.target.nodeName === "circle") {
+                    map.infoWindow.hide();
+                    activeClusterElement = e.target;
+                    setActiveClusterOpacity(1);
+                // text
+                } else {
+                    // re-activate cluster
+                    setActiveClusterOpacity(1);
+                }
+            }
+        }
+
+        function onMouseOutCluster(e) {
+            // reset opacity
+            if (e.graphic.attributes.clusterCount > 1) {
+                // circle
+                if (e.target.nodeName === "circle") {
+                    setActiveClusterOpacity(0.75);
+                }
+            }
+        }
+
+        // Hide popup if selected feature is clustered
+        function onClustersShown(clusters) {
+            var  i = 0,
+                extent;
+            if (map.infoWindow.isShowing && map.infoWindow._lastSelected) {
+                for (i; i < clusters.length; i++) {
+                    if (clusters[i].attributes.clusterCount > 1) {
+                        extent = clusterLayer._getClusterExtent(clusters[i]);
+                        if (extent.contains(map.infoWindow._lastSelected.geometry)) {
+                            map.infoWindow.hide();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Wire cluster layer events
+        function addClusterLayerEvents() {
+            // Mouse over events
+            clusterLayer.on("mouse-over", onMouseOverCluster);
+            clusterLayer.on("mouse-out", onMouseOutCluster);
+            // Clusters drawn
+            clusterLayer.on("clusters-shown", onClustersShown);
+        }
+
+        // Wire map events
+        map.on("load", function () {
+            // Scrollwheel zoom behavior is inverse to other systems, turning off.
+            map.disableScrollWheelZoom();
+            // Add layer
+            addClusterLayer();
+            addClusterLayerEvents();
+        });
+
+        // Close the info window when the map is clicked
+        map.on('click', function () {
+            if (map.infoWindow.isShowing) {
+                map.infoWindow.hide();
+            }
+        });
+
+        // Close the info window when esc is pressed
+        map.on('key-down', function (e) {
+            if (e.keyCode === 27) {
+                removeSelectedFeature();
+                map.infoWindow.hide();
+            }
+        });
+
+        // Dynamically reposition popups when map moves - causes popup to disapear in the far eastern hemisphere
+        // map.on('extent-change', function () {
+        //     if (map.infoWindow.isShowing) {
+        //         map.infoWindow.reposition();
+        //     }
+        // });
+
+        // Save the last selected graphic so we can highlight it
+        map.infoWindow.on("selection-change", function () {
+            addSelectedFeature();
+        });
+
+        // Clear selected graphic when infoWindow is hidden
+        map.infoWindow.on("hide", function () {
+            removeSelectedFeature();
+        });
+
+    });
+
+</script>
+</head>
+<body>
+    <div id="mapDiv"></div>
+    <div id="search"></div>
+</body>
+</html>
+=======
+<html>
+<head>
+    <meta charset=utf-8 />
+    <title>GIS Day Esri-Leaflet</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <!-- Load Leaflet from CDN-->
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+    <!-- Load Esri Leaflet from CDN -->
+    <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet/1.0.0-rc.4/esri-leaflet.js"></script>
+    
+    <!-- Load Esri Clustered Feature Layer from CDN -->
+    <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-clustered-feature-layer/1.0.0-rc.4/esri-leaflet-clustered-feature-layer.js"></script>
+
+    <!-- Include Leaflet.markercluster via rawgit.com, do not use in production -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/Leaflet/Leaflet.markercluster/v0.4.0/dist/MarkerCluster.Default.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/Leaflet/Leaflet.markercluster/v0.4.0/dist/MarkerCluster.css">
+    <script src="https://cdn.rawgit.com/Leaflet/Leaflet.markercluster/v0.4.0/dist/leaflet.markercluster.js"></script>
+
+    <!-- Fonts -->
+    <script type="text/javascript" src="http://fast.fonts.net/jsapi/4a60d16b-c9e4-404d-89d3-809adb97d65c.js"></script>
+
+    <!-- Esri Leaflet Geocoder -->
+    <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/1.0.0-rc.2/esri-leaflet-geocoder.js"></script>
+    <link rel="stylesheet" type="text/css" href="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/1.0.0-rc.2/esri-leaflet-geocoder.css">
+  
+    <!-- More controls -->
+    <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.css' rel='stylesheet' />
+    
+    <!--[if lt IE 9]>
+      <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.21.0/L.Control.Locate.ie.css' rel='stylesheet' />
+    <![endif]-->
+
+    <style>
+        body {margin:0;padding:0;}
+        #map {position: absolute;top:0;bottom:0;right:0;left:0;}
+
+        /* Clusters */
+        .cluster {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        /* Small */
+        .cluster-small {
+            box-shadow: 0 0 4px rgba(255,255,255,0.15);
+            background-color: rgba(140,177,210,0.4);
+            margin-left: -20px;
+            margin-top: -20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+        }
+        .cluster-small:hover {
+          background-color: rgba(140,177,210,0.7);
+        }
+        .cluster-small:hover > div {
+          background-color: rgba(140,177,210,0);
+        }
+        .cluster-small > div {
+            background-color: rgba(140,177,210,0.85);
+            width: 24px;
+            height: 24px;
+            margin-left: 8px;
+            margin-top: 8px;
+            text-align: center;
+            border-radius: 24px;
+        }
+        .cluster-small > div > span {
+            line-height: 24px;
+        }
+        /* Medium */
+        .cluster-medium {
+            box-shadow: 0 0 6px rgba(255,255,255,0.15);
+            background-color: rgba(97,147,179,0.4);
+            margin-left: -30px;
+            margin-top: -30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+        }
+        .cluster-medium > div {
+            background-color: rgba(97,147,179,0.85);
+            width: 44px;
+            height: 44px;
+            margin-left: 8px;
+            margin-top: 8px;
+            text-align: center;
+            border-radius: 22px;
+        }
+        .cluster-medium > div > span {
+            line-height: 44px;
+        }
+        .cluster-medium:hover {
+          background-color: rgba(97,147,179,0.7);
+        }
+        .cluster-medium:hover > div {
+          background-color: rgba(97,147,179,0);
+        }
+        /* Large */
+        .cluster-large {
+            box-shadow: 0 0 10px rgba(255,255,255,0.15);
+            background-color: rgba(59,110,128,0.4);
+            margin-left: -40px;
+            margin-top: -40px;
+            width: 80px;
+            height: 80px;
+            border-radius: 40px;
+        }
+        .cluster-large > div {
+            background-color: rgba(59,110,128,0.85);
+            width: 60px;
+            height: 60px;
+            margin-left: 10px;
+            margin-top: 10px;
+            text-align: center;
+            border-radius: 30px;
+        }
+        .cluster-large:hover {
+          background-color: rgba(59,110,128,1);
+        }
+        .cluster-large:hover {
+          background-color: rgba(59,110,128,0.7);
+        }
+        .cluster-large:hover > div {
+          background-color: rgba(59,110,128,0);
+        }
+        .cluster-large > div > span {
+            line-height: 60px;
+        }
+        /* xLarge */
+        .cluster-xlarge {
+            box-shadow: 0 0 16px rgba(255,255,255,0.15);
+            background-color: rgba(20,72,77,0.4);
+            margin-left: -60px;
+            margin-top: -60px;
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+        }
+        .cluster-xlarge:hover {
+          background-color: rgba(20,72,77,0.7);
+        }
+        .cluster-xlarge:hover > div {
+          background-color: rgba(20,72,77,0);
+        }
+        .cluster-xlarge > div {
+            background-color: rgba(20,72,77,0.85);
+            width: 100px;
+            height: 100px;
+            margin-left: 10px;
+            margin-top: 10px;
+            text-align: center;
+            border-radius: 50px;
+        }
+        .cluster-xlarge > div > span {
+            line-height: 100px;
+        }
+
+        /* Popup */
+        .leaflet-popup-pane h3 {
+          font-family:'Avenir LT W01 65 Medium';
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .leaflet-popup-content {
+            width: 250px;
+            font-size: 14px;
+        }
+        .leaflet-popup-content p {
+            margin: 1em 0;
+            /*max-height: 150px;*/
+            /*overflow-y: scroll;*/
+        }
+        .leaflet-popup-content h2 {
+            margin-top: 15px;
+        }
+
+        .popup-bottom {
+            background: #f2f2f2;
+            margin: 1em -20px -1em;
+            padding: .5em 20px;
+        }
+        .popup-bottom p {
+            margin: .5em 0;
+        }
+
+        .popup-host {
+            font-size: 12px;
+            margin-left: -20px;
+            margin-right: -20px;
+            padding: 1px 20px;
+            background-color: #d9d9d9;
+        }
+
+       .leaflet-popup-tip {
+            background: #f2f2f2;
+        }
+
         .marker {
             margin-left: -15px;
             margin-top: -15px;
@@ -619,6 +937,15 @@
             height: 30px;
             border-radius: 15px;
         }
+
+        .marker {
+            margin-left: -15px;
+            margin-top: -15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
+        }
+
         .marker path, .marker circle {
           fill: rgba(255, 255, 255, 0.9);
         }
@@ -631,10 +958,17 @@
           padding: 3px;
           text-align: center;
           border-radius: 14px;
+
         }
         .marker:hover {
           background-color: rgba(140,177,210,0.7);
         }
+
+        }
+        .marker:hover {
+          background-color: rgba(140,177,210,0.7);
+        }
+
         /* .marker:hover > div {
           background-color: rgba(140,177,210,1);
         }*/
@@ -793,5 +1127,6 @@
           }
         });
     </script>
-
 </body>
+</html>
+
