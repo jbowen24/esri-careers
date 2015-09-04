@@ -1,0 +1,797 @@
+<!DOCTYPE html> 
+<html>  
+<head> 
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>GIS Day Demo App</title>  
+    <link rel="shortcut icon" href="//esri.github.io/quickstart-map-js/images/favicon.ico">
+    <!-- ArcGIS API for JavaScript CSS-->
+    <link rel="stylesheet" href="//js.arcgis.com/3.10/js/esri/css/esri.css">
+    <!-- Web Framework CSS - Bootstrap (getbootstrap.com) and Bootstrap-map-js (github.com/esri/bootstrap-map-js) -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./vendor/bootstrap-map-js/css/bootstrapmap.css">
+    
+    <style>
+        html, body, #mapDiv {
+          height: 100%;
+          width: 100%;
+        }
+        #search {
+            display: block;
+            position: absolute;
+            z-index: 2;
+            top: 15px;
+            left: 62px;
+        }
+
+        .esriPopup {
+            font-family: Avenir;
+        }
+
+        .esriPopup .title {
+            color: #3a78c0;
+            font-size: 14px;
+        }
+
+        .esriPopup .esriPopupWrapper, .esriPopup .titlePane, .esriPopup .contentPane, .esriPopup .actionsPane {
+            background-color: #f5f5f5;
+        }
+
+        .esriPopup .titlePane {
+            padding: 8px 14px 0px;
+        }
+
+        .esriPopup .contentPane  {
+            font-size: 12px;
+            color: #989898;
+            max-height: none;
+            border-top: none;
+        }
+
+        .popup-content-background {
+            margin: 0 -14px;
+            padding: 2px 14px 8px 14px;
+            background-color: #fff;
+        }
+
+        .popup-event-name {
+            color: #4d4d4d;
+            font-size: 15px;
+            font-weight: bold;
+            padding: 4px 0;
+        }
+
+        .popup-event-header {
+            color: #4d4d4d;
+        }
+
+        .header-space {
+            margin: 8px 0 10px;
+        }
+
+        .header-nospace {
+            margin: 0;
+        }
+
+        /* Required Bootstrapmap.css changes */
+        .esriPopup .outerPointer.left {
+            background-position: 0px 0;
+            left: 6px;
+            width: 10px;
+            height: 15px;
+        }
+
+        .esriPopup .outerPointer.right {
+            background-position: -19px -1px;
+            right: 6px;
+            height: 15px;
+            width: 10px;
+        }
+
+        .esriPopup .pointer.top {
+            margin-left: -11px;
+        }
+
+        .esriPopup .titleButton.prev {
+            right: 45px;
+        }
+
+        .simpleGeocoder .esriGeocoderContainer {
+            width: 225px;
+        }
+
+        .simpleGeocoder .esriGeocoder input {
+          width: 160px;
+        }
+
+        .simpleGeocoder .esriGeocoderIcon {
+            margin: 8px 0 6px 6px;
+        }
+
+    </style>
+<!-- 
+    <script type="text/javascript">
+        var dojoConfig = {
+            paths: {
+              src: location.pathname.replace(/\/[^/]+$/, '')
+            }
+        };
+    </script> -->
+
+    <!-- ArcGIS API for JavaScript library references -->
+        <script src="//js.arcgis.com/3.10compact"></script>
+    <script>
+    require(["esri/map",
+        "esri/dijit/Geocoder",
+        "esri/renderers/SimpleRenderer",
+        "esri/symbols/PictureMarkerSymbol",
+        "esri/layers/FeatureLayer",
+        "esri/InfoTemplate",
+        "esri/graphic",
+        "esri/graphicsUtils",
+        "./src/clusterfeaturelayer.js",
+        "esri/symbols/SimpleMarkerSymbol",
+        "esri/symbols/SimpleLineSymbol",
+        "esri/symbols/SimpleFillSymbol",
+        "esri/symbols/PictureMarkerSymbol",
+        "esri/renderers/ClassBreaksRenderer",
+        "dojo/_base/Color",
+        "dojo/keys",
+        "dojo/on",
+        "dojo/dom",
+        "dojo/domReady!"],
+      function (Map, Geocoder, SimpleRenderer, PictureMarkerSymbol, FeatureLayer, InfoTemplate, Graphic, graphicsUtils, ClusterFeatureLayer, SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, PictureMarkerSymbol, ClassBreaksRenderer, Color, keys, on, dom) {
+        
+        // Locals
+        var map,
+            popup,
+            clusterLayer,
+            geocoder,
+            infoTemplate,
+            defaultSym,
+            selectedSym,
+            activeClusterElement;
+
+        // Create map
+        map = new Map("mapDiv", {
+            basemap: "gray",
+            center: [-43, 40],
+            zoom: 3
+        });
+
+        // Create widget
+        geocoder = new Geocoder({
+            value: "Redlands, CA",
+            autoNavigate: true,
+            maxLocations: 25,
+            autoComplete: true,
+            arcgisGeocoder: {
+            outFields: "Place_addr, PlaceName, Score"
+            },
+            map: map
+            }, "search");
+        geocoder.startup();
+
+        // Set popup
+        popup = map.infoWindow;
+        popup.highlight = false;
+        popup.titleInBody = false;
+        //popup.domNode.style.marginTop = "-16px";  // for pins only
+        // popup.domNode.style.marginLeft = "-2px";  // for pins only
+        // popup.domNode.style.marginRight = "2px";  // for pins only
+
+
+        // Popup content
+        infoTemplate = new InfoTemplate("COMMUNITY EVENT", "<div class='popup-content-background'><div class='popup-event-name'>${EventName}</div>${Descriptio}<br>${EventType} ${PrimaryAud}</div><p class='popup-event-header header-space'>HOST: <a target='_blank' href='${Url}'>${Organizati}</a></p><p class='popup-event-header header-nospace'>CONTACT: <a target='_top' href='mailto:${Email}?subject=GIS Day Event'>${Name}</a></p>");
+
+        // Esri marker for single locations and selections
+        //defaultSym = new createPictureSymbol("./images/blue-cluster-pin.png", 0, 8, 8, 15);
+        //selectedSym = new createPictureSymbol("./images/blue-pin.png", 0, 8, 8, 15);
+        //defaultSym = new createPictureSymbol("./images/blue-cluster-pin.png", 0, 9, 10, 19);
+        //selectedSym = new createPictureSymbol("./images/blue-pin.png", 0, 9, 10, 19);
+
+        // Optional non-pin styles
+        defaultSym = new SimpleMarkerSymbol("circle", 13,
+                        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85, 125, 140, 0.6]), 5),
+                        new Color([255, 255, 255, 1]));
+
+        selectedSym = new SimpleMarkerSymbol("circle", 15,
+                        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([85, 125, 255, 1]), 5),
+                        new Color([255, 255, 255, 1]));
+
+        // Create a feature layer to get feature service
+        function addClusterLayer() {
+            var renderer,
+                sls,
+                sms,
+                small,
+                medium,
+                large,
+                xlarge;
+
+            // Add cluster renderer
+            clusterLayer = new ClusterFeatureLayer({
+                "url": "https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/GIS_Day/FeatureServer/0",
+                "distance": 55,
+                "id": "clusters",
+                "labelColor": "#fff",
+                "resolution": map.extent.getWidth() / map.width,
+                //"singleColor": "#888",
+                "singleSymbol": defaultSym,
+                "singleTemplate": infoTemplate,
+                "useDefaultSymbol": false,
+                "zoomOnClick": true,
+                "showSingles": true,
+                "objectIdField": "FID",
+                outFields: ["Name", "Organizati", "department", "Alocation", "AAdress", "City", "State", "Province", "Country", "PostCode", "Telephone", "Email", "Url", "EventType", "Descriptio", "PrimaryAud", "EventName"]
+            });
+
+            renderer = new ClassBreaksRenderer(defaultSym, "clusterCount");
+            sls = SimpleLineSymbol;
+            sms = SimpleMarkerSymbol;
+
+            // User four breaks to cluster
+            small = new sms("circle", 20,
+                        new sls(sls.STYLE_SOLID, new Color([140,177,210,0.5]), 15),
+                        new Color([140,177,210,0.75]));
+            medium = new sms("circle", 50,
+                        new sls(sls.STYLE_SOLID, new Color([97,147,179,0.5]), 15),
+                        new Color([97,147,179,0.75]));
+            large = new sms("circle", 80,
+                        new sls(sls.STYLE_SOLID, new Color([59,110,128,0.5]), 15),
+                        new Color([59,110,128,0.75]));
+            xlarge = new sms("circle", 110,
+                        new sls(sls.STYLE_SOLID, new Color([20,72,77,0.5]), 15),
+                        new Color([20,72,77,0.75]));
+
+            // Break values - can adjust easily
+            renderer.addBreak(2, 5, small);
+            renderer.addBreak(5, 20, medium);
+            renderer.addBreak(20, 100, large);
+            renderer.addBreak(100, 5000, xlarge);
+
+            // Providing a ClassBreakRenderer is also optional
+            clusterLayer.setRenderer(renderer);
+            map.addLayer(clusterLayer);
+        }
+
+        // Create png marker
+        function createPictureSymbol(url, xOffset, yOffset, xWidth, yHeight) {
+            return new PictureMarkerSymbol(
+                {
+                    "angle": 0,
+                    "xoffset": xOffset,
+                    "yoffset": yOffset,
+                    "type": "esriPMS",
+                    "url": url,
+                    "contentType": "image/png",
+                    "width": xWidth,
+                    "height": yHeight
+                }
+            );
+        }
+
+        // Create new graphic and add to map.graphics
+        function addSelectedFeature() {
+            var selIndex = map.infoWindow.selectedIndex,
+                selFeature;
+            if (selIndex !== -1) {
+                selFeature = map.infoWindow.features[selIndex];
+                // Remove old feature first
+                removeSelectedFeature();
+                // Add new graphic
+                map.infoWindow._lastSelected = new Graphic(selFeature.toJson());
+                map.infoWindow._lastSelected.setSymbol(selectedSym);
+                map.graphics.add(map.infoWindow._lastSelected);
+            }
+        }
+
+        // Remove graphic from map.graphics
+        function removeSelectedFeature() {
+            if (map.infoWindow._lastSelected) {
+                map.graphics.remove(map.infoWindow._lastSelected);
+                map.infoWindow._lastSelected = null;
+            }
+        }
+
+       // Highlight clusters
+        function setActiveClusterOpacity(opacity) {
+            if (activeClusterElement) {
+                activeClusterElement.setAttribute("fill-opacity", opacity);
+                activeClusterElement.setAttribute("stroke-opacity", opacity);
+            }
+        }
+
+        // Show popups on hover - probably can be optimized
+        function onMouseOverCluster(e) {
+            if (e.graphic.attributes.clusterCount === 1) {
+                e.graphic._graphicsLayer.onClick(e);
+            } else {
+                // circle
+                if (e.target.nodeName === "circle") {
+                    map.infoWindow.hide();
+                    activeClusterElement = e.target;
+                    setActiveClusterOpacity(1);
+                // text
+                } else {
+                    // re-activate cluster
+                    setActiveClusterOpacity(1);
+                }
+            }
+        }
+
+        function onMouseOutCluster(e) {
+            // reset opacity
+            if (e.graphic.attributes.clusterCount > 1) {
+                // circle
+                if (e.target.nodeName === "circle") {
+                    setActiveClusterOpacity(0.75);
+                }
+            }
+        }
+
+        // Hide popup if selected feature is clustered
+        function onClustersShown(clusters) {
+            var  i = 0,
+                extent;
+            if (map.infoWindow.isShowing && map.infoWindow._lastSelected) {
+                for (i; i < clusters.length; i++) {
+                    if (clusters[i].attributes.clusterCount > 1) {
+                        extent = clusterLayer._getClusterExtent(clusters[i]);
+                        if (extent.contains(map.infoWindow._lastSelected.geometry)) {
+                            map.infoWindow.hide();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Wire cluster layer events
+        function addClusterLayerEvents() {
+            // Mouse over events
+            clusterLayer.on("mouse-over", onMouseOverCluster);
+            clusterLayer.on("mouse-out", onMouseOutCluster);
+            // Clusters drawn
+            clusterLayer.on("clusters-shown", onClustersShown);
+        }
+
+        // Wire map events
+        map.on("load", function () {
+            // Scrollwheel zoom behavior is inverse to other systems, turning off.
+            map.disableScrollWheelZoom();
+            // Add layer
+            addClusterLayer();
+            addClusterLayerEvents();
+        });
+
+        // Close the info window when the map is clicked
+        map.on('click', function () {
+            if (map.infoWindow.isShowing) {
+                map.infoWindow.hide();
+            }
+        });
+
+        // Close the info window when esc is pressed
+        map.on('key-down', function (e) {
+            if (e.keyCode === 27) {
+                removeSelectedFeature();
+                map.infoWindow.hide();
+            }
+        });
+
+        // Dynamically reposition popups when map moves - causes popup to disapear in the far eastern hemisphere
+        // map.on('extent-change', function () {
+        //     if (map.infoWindow.isShowing) {
+        //         map.infoWindow.reposition();
+        //     }
+        // });
+
+        // Save the last selected graphic so we can highlight it
+        map.infoWindow.on("selection-change", function () {
+            addSelectedFeature();
+        });
+
+        // Clear selected graphic when infoWindow is hidden
+        map.infoWindow.on("hide", function () {
+            removeSelectedFeature();
+        });
+
+    });
+
+</script>
+</head>
+<body>
+    <div id="mapDiv"></div>
+    <div id="search"></div>
+</body>
+</html>
+=======
+<html>
+<head>
+    <meta charset=utf-8 />
+    <title>GIS Day Esri-Leaflet</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <!-- Load Leaflet from CDN-->
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+    <!-- Load Esri Leaflet from CDN -->
+    <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet/1.0.0-rc.4/esri-leaflet.js"></script>
+    
+    <!-- Load Esri Clustered Feature Layer from CDN -->
+    <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-clustered-feature-layer/1.0.0-rc.4/esri-leaflet-clustered-feature-layer.js"></script>
+
+    <!-- Include Leaflet.markercluster via rawgit.com, do not use in production -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/Leaflet/Leaflet.markercluster/v0.4.0/dist/MarkerCluster.Default.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/Leaflet/Leaflet.markercluster/v0.4.0/dist/MarkerCluster.css">
+    <script src="https://cdn.rawgit.com/Leaflet/Leaflet.markercluster/v0.4.0/dist/leaflet.markercluster.js"></script>
+
+    <!-- Fonts -->
+    <script type="text/javascript" src="http://fast.fonts.net/jsapi/4a60d16b-c9e4-404d-89d3-809adb97d65c.js"></script>
+
+    <!-- Esri Leaflet Geocoder -->
+    <script src="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/1.0.0-rc.2/esri-leaflet-geocoder.js"></script>
+    <link rel="stylesheet" type="text/css" href="http://cdn-geoweb.s3.amazonaws.com/esri-leaflet-geocoder/1.0.0-rc.2/esri-leaflet-geocoder.css">
+  
+    <!-- More controls -->
+    <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.css' rel='stylesheet' />
+    
+    <!--[if lt IE 9]>
+      <link href='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.21.0/L.Control.Locate.ie.css' rel='stylesheet' />
+    <![endif]-->
+
+    <style>
+        body {margin:0;padding:0;}
+        #map {position: absolute;top:0;bottom:0;right:0;left:0;}
+
+        /* Clusters */
+        .cluster {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        /* Small */
+        .cluster-small {
+            box-shadow: 0 0 4px rgba(255,255,255,0.15);
+            background-color: rgba(140,177,210,0.4);
+            margin-left: -20px;
+            margin-top: -20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+        }
+        .cluster-small:hover {
+          background-color: rgba(140,177,210,0.7);
+        }
+        .cluster-small:hover > div {
+          background-color: rgba(140,177,210,0);
+        }
+        .cluster-small > div {
+            background-color: rgba(140,177,210,0.85);
+            width: 24px;
+            height: 24px;
+            margin-left: 8px;
+            margin-top: 8px;
+            text-align: center;
+            border-radius: 24px;
+        }
+        .cluster-small > div > span {
+            line-height: 24px;
+        }
+        /* Medium */
+        .cluster-medium {
+            box-shadow: 0 0 6px rgba(255,255,255,0.15);
+            background-color: rgba(97,147,179,0.4);
+            margin-left: -30px;
+            margin-top: -30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+        }
+        .cluster-medium > div {
+            background-color: rgba(97,147,179,0.85);
+            width: 44px;
+            height: 44px;
+            margin-left: 8px;
+            margin-top: 8px;
+            text-align: center;
+            border-radius: 22px;
+        }
+        .cluster-medium > div > span {
+            line-height: 44px;
+        }
+        .cluster-medium:hover {
+          background-color: rgba(97,147,179,0.7);
+        }
+        .cluster-medium:hover > div {
+          background-color: rgba(97,147,179,0);
+        }
+        /* Large */
+        .cluster-large {
+            box-shadow: 0 0 10px rgba(255,255,255,0.15);
+            background-color: rgba(59,110,128,0.4);
+            margin-left: -40px;
+            margin-top: -40px;
+            width: 80px;
+            height: 80px;
+            border-radius: 40px;
+        }
+        .cluster-large > div {
+            background-color: rgba(59,110,128,0.85);
+            width: 60px;
+            height: 60px;
+            margin-left: 10px;
+            margin-top: 10px;
+            text-align: center;
+            border-radius: 30px;
+        }
+        .cluster-large:hover {
+          background-color: rgba(59,110,128,1);
+        }
+        .cluster-large:hover {
+          background-color: rgba(59,110,128,0.7);
+        }
+        .cluster-large:hover > div {
+          background-color: rgba(59,110,128,0);
+        }
+        .cluster-large > div > span {
+            line-height: 60px;
+        }
+        /* xLarge */
+        .cluster-xlarge {
+            box-shadow: 0 0 16px rgba(255,255,255,0.15);
+            background-color: rgba(20,72,77,0.4);
+            margin-left: -60px;
+            margin-top: -60px;
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+        }
+        .cluster-xlarge:hover {
+          background-color: rgba(20,72,77,0.7);
+        }
+        .cluster-xlarge:hover > div {
+          background-color: rgba(20,72,77,0);
+        }
+        .cluster-xlarge > div {
+            background-color: rgba(20,72,77,0.85);
+            width: 100px;
+            height: 100px;
+            margin-left: 10px;
+            margin-top: 10px;
+            text-align: center;
+            border-radius: 50px;
+        }
+        .cluster-xlarge > div > span {
+            line-height: 100px;
+        }
+
+        /* Popup */
+        .leaflet-popup-pane h3 {
+          font-family:'Avenir LT W01 65 Medium';
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .leaflet-popup-content {
+            width: 250px;
+            font-size: 14px;
+        }
+        .leaflet-popup-content p {
+            margin: 1em 0;
+            /*max-height: 150px;*/
+            /*overflow-y: scroll;*/
+        }
+        .leaflet-popup-content h2 {
+            margin-top: 15px;
+        }
+
+        .popup-bottom {
+            background: #f2f2f2;
+            margin: 1em -20px -1em;
+            padding: .5em 20px;
+        }
+        .popup-bottom p {
+            margin: .5em 0;
+        }
+
+        .popup-host {
+            font-size: 12px;
+            margin-left: -20px;
+            margin-right: -20px;
+            padding: 1px 20px;
+            background-color: #d9d9d9;
+        }
+
+       .leaflet-popup-tip {
+            background: #f2f2f2;
+        }
+
+        .marker {
+            margin-left: -15px;
+            margin-top: -15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 15px;
+        }
+        .marker path, .marker circle {
+          fill: rgba(255, 255, 255, 0.9);
+        }
+        .marker > div {
+          background-color: rgba(59,110,128,0.7);
+          width: 14px;
+          height: 14px;
+          margin-left: 5px;
+          margin-top: 5px;
+          padding: 3px;
+          text-align: center;
+          border-radius: 14px;
+        }
+        .marker:hover {
+          background-color: rgba(140,177,210,0.7);
+        }
+        /* .marker:hover > div {
+          background-color: rgba(140,177,210,1);
+        }*/
+
+        /* Esri Geocode control */
+        .geocoder-control-header {
+            font-size: 11px;
+            letter-spacing: 0.0725em;
+        }
+
+        .geocoder-control-suggestions .geocoder-control-suggestion.geocoder-control-selected,
+        .geocoder-control-suggestions .geocoder-control-suggestion:hover {
+            background-color: rgba(180,200,220,1);
+        }
+
+        .geocoder-control-expanded,
+        .leaflet-touch .geocoder-control-expanded {
+            width: 295px;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="https://github.com/esri/gis-day-map"><img style="position: absolute; top: 0; right: 0; border: 0; width: 100px; z-index:100;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+    
+    <div id="map"></div>
+
+    <script>
+        var map,
+            clusterLayer,
+            singlePin;
+
+        map = L.map('map', { maxZoom: 16 }).setView([15, -35], 2);
+
+        // Use Esri Streets or GrayLables
+        L.esri.basemapLayer('Streets').addTo(map);
+
+        singlePin = L.divIcon({
+            html: '<div><svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg></div>',
+            className: 'marker',
+            iconSize: null,
+            popupAnchor: [0, -11]
+        });
+
+        // Create cluster layer from GIS Day data in AGOL
+        clusterLayer = L.esri.clusteredFeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisdaydata/FeatureServer/0', 
+        {
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            maxClusterRadius: 55,
+
+            // Single pins
+            pointToLayer: function (geojson, latlng) {
+                return L.marker(latlng, {
+                    icon: singlePin
+                });
+            },
+
+            // Format popups
+            onEachFeature: function (geojson, marker) {
+                var url = geojson.properties.URL ? "<a target='_blank' href='" + geojson.properties.URL.toString() + "'>" + geojson.properties.Name + "</a>" : geojson.properties.Name,
+                    desc =  geojson.properties.Description,
+                    dateTime = new Date(geojson.properties.DateTime),
+                    min = dateTime.getMinutes() ? dateTime.getMinutes() : "00",
+                    hr = dateTime.getUTCHours(),
+                    ampm = hr < 12 ? "AM" : "PM";
+                hr = hr > 12 ? hr - 12 : hr;
+                dateTime = dateTime.toDateString() + ", " + hr + ":" + min + " " + ampm;
+                marker.bindPopup("<h2>" + url + "</h2><p>" +  desc + "<br>" + geojson.properties.Type + " " + geojson.properties.Audience + "</p></div><div class='popup-bottom'><p>DATE: " + dateTime + "</p><p>ADDRESS: " + geojson.properties.Address + "</p><div class='popup-host'><p>HOST: <a target='_top' href='mailto:" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Organization + "</a></p></div></div>");
+                // store data
+                marker.properties = {};
+                marker.properties.Name = geojson.properties.Name;
+            },
+
+            // Cluster styles
+            iconCreateFunction: function (cluster) {
+                var count = cluster.getChildCount(),
+                    clusterSize;
+                // Get cluster count
+                if (count > 1 && count <= 5)
+                    clusterSize = "small";
+                else if (count > 5 && count <= 20)
+                    clusterSize = "medium";
+                else if (count > 20 && count <= 50)
+                    clusterSize = "large";
+                else
+                    clusterSize = "xlarge";
+                // Create cluster
+                return new L.DivIcon({
+                    html: "<div><span>"+count+"</span></div>",
+                    className:"cluster cluster-"+clusterSize,
+                    iconSize: null
+                });
+            }
+        }).addTo(map);
+
+        // Auto-show popup
+        clusterLayer.on('mouseover', function (e) {
+            e.layer.openPopup();
+        });
+
+        // Zoom in to single feature, always show popup
+        clusterLayer.on('click', function (e) {
+            e.layer.openPopup();
+        });
+
+        // Show popup
+        clusterLayer.on('mousedown', function (e) {
+            e.layer.openPopup();     
+        }); 
+
+        // Zoom
+        clusterLayer.on('dblclick', function(e) {
+            map.setZoomAround(e.latlng, map.getZoom() + 1);
+        });
+
+        // Prevent toggling/flickering effect of popup
+        map.on('mouseup', function(e) {
+            if (e.target._popup) {
+                e.target._popup._isOpen = false;
+            }
+        });
+
+        // Add geolocation control
+        L.control.locate({
+          follow: false,
+          icon: 'icon-location',
+          showPopup: false,
+           locateOptions: {
+             maxZoom: 13
+          }
+        }).addTo(map);
+
+        // Add search control to search world places as well as GIS Day feature service
+        var searchControl = new L.esri.Geocoding.Controls.Geosearch({
+          placeholder: "Search for event name, host or location",
+          useMapBounds: false,
+          providers: [
+                new L.esri.Geocoding.Controls.Geosearch.Providers.FeatureLayer('http://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisdaydata/FeatureServer/0', {
+              searchFields: ['Name', 'Organization'],
+              label: 'GIS Day Events',
+              bufferRadius: 5000,
+              formatSuggestion: function(feature){
+                return feature.properties.Name + ' - ' + feature.properties.Organization;
+              }
+            })
+          ]
+        }).addTo(map);
+
+        // Show feature and popup when selected 
+        searchControl.on("results", function(data){
+           if(data.results && data.results[0].properties.FID){
+            clusterLayer.once('load', function(){
+              clusterLayer.getFeature(data.results[0].properties.FID).openPopup();
+            });
+          }
+        });
+    </script>
+
+</body>
