@@ -300,7 +300,7 @@
                     ampm = hr < 12 ? "AM" : "PM";
                 hr = hr > 12 ? hr - 12 : hr;
                 dateTime = dateTime.toDateString() + ", " + hr + ":" + min + " " + ampm;
-                marker.bindPopup("<h2>" + url + "</h2><p>" +  desc + "<br>" + geojson.properties.CITY + geojson.properties.COUNTRY + geojson.properties.OFFTYPELBL + " " + geojson.properties.OFFTYPE + "</p></div><div class='popup-bottom'><p>Contact: " + geojson.properties.CONTACT_1 + "</p><p>Email: " + geojson.properties.EMAIL_1 + "</p><div class='popup-host'><p>Website: " + geojson.properties.WEBSITEURL + "</a></p></div></div>");
+                marker.bindPopup("<h2>" + "Mozilla Toronto Offices<br/><img src='http://joshuafrazier.info/images/maptime.gif' alt='maptime logo gif' width='100%'/>" + "</h2><p>" +  desc + "<br>" + geojson.properties.CITY + geojson.properties.COUNTRY + geojson.properties.OFFTYPELBL + " " + geojson.properties.OFFTYPE + "</p></div><div class='popup-bottom'><p>Contact: " + geojson.properties.CONTACT_1 + "</p><p>Email: " + geojson.properties.EMAIL_1 + "</p><div class='popup-host'><p>Website: " + geojson.properties.WEBSITEURL + "</a></p></div></div>");
                 // store data
                 marker.properties = {};
                 marker.properties.Name = geojson.properties.Name;
