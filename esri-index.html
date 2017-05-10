@@ -703,7 +703,7 @@
                     ampm = hr < 12 ? "AM" : "PM";
                 hr = hr > 12 ? hr - 12 : hr;
                 dateTime = dateTime.toDateString() + ", " + hr + ":" + min + " " + ampm;
-                marker.bindPopup("<h2>" + url + "</h2><p>" +  desc + "<br>" + geojson.properties.Type + " " + geojson.properties.Audience + "</p></div><div class='popup-bottom'><p>DATE: " + dateTime + "</p><p>ADDRESS: " + geojson.properties.Address + "</p><div class='popup-host'><p>HOST: <a target='_top' href='mailto:" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Organization + "</a></p></div></div>");
+                marker.bindPopup("<h2>" + "https://zvelo.com/wp-content/uploads/map-language-support-by-country-zvelodb-url-database-for-oems-copyright.png" + "</h2><p>" +  desc + "<br>" + geojson.properties.Type + " " + geojson.properties.Audience + "</p></div><div class='popup-bottom'><p>DATE: " + dateTime + "</p><p>ADDRESS: " + geojson.properties.Address + "</p><div class='popup-host'><p>HOST: <a target='_top' href='mailto:" + geojson.properties.Email + "?subject=GIS Day Event'>" + geojson.properties.Organization + "</a></p></div></div>");
                 // store data
                 marker.properties = {};
                 marker.properties.Name = geojson.properties.Name;
